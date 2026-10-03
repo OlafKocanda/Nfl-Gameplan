@@ -22,6 +22,10 @@ const ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scorebo
 const ESPN_TEAM = { WSH: "WAS" };                 // ESPN-Kürzel, die von unseren abweichen
 const ESPN_PLAYOFF = { 19: 1, 20: 2, 21: 3, 22: 5 }; // ESPN-Woche 4 ist der Pro Bowl
 const TZ = "Europe/Berlin";
+// Papiertipps: Spiele vor dem Start der App lassen sich bis zum 18.10. nachtragen.
+// Muss zu isBackfill() in firestore.rules passen.
+const BACKFILL_BEFORE = new Date("2026-10-03T00:00:00Z");
+const BACKFILL_UNTIL = new Date("2026-10-18T00:00:00Z");
 
 const wrap = document.querySelector(".wrap");
 
@@ -101,6 +105,11 @@ function started(g) {
   return (g.kickoff && now() >= g.kickoff) || g.winner != null
     || g.status === "in" || g.status === "post";
 }
+
+function isBackfill(g) {
+  return !!g.kickoff && g.kickoff < BACKFILL_BEFORE && now() < BACKFILL_UNTIL;
+}
+const backfillOpen = () => now() < BACKFILL_UNTIL;
 
 function currentWeek() {
   for (let w = 1; w <= 18; w++) {
@@ -242,18 +251,22 @@ async function seed() {
 // Fremde Tipps einzeln holen, sobald das Spiel angepfiffen ist. Danach
 // ändern sie sich nie mehr, deshalb merkt sich der Browser sie.
 const cacheKey = () => `tippspiel:${firebaseConfig.projectId}:${other()}`;
+// Papiertipps können sich bis zum 18.10. noch ändern, die nicht merken.
 function loadCache() {
   try { return JSON.parse(localStorage.getItem(cacheKey()) || "{}"); } catch { return {}; }
 }
 function saveCache() {
-  try { localStorage.setItem(cacheKey(), JSON.stringify(Object.fromEntries(S.theirs))); } catch {}
+  const keep = [...S.theirs].filter(([id]) => !isBackfill(S.games.get(id) || {}));
+  try { localStorage.setItem(cacheKey(), JSON.stringify(Object.fromEntries(keep))); } catch {}
 }
 let revealing = null;
 async function reveal() {
   if (revealing) return revealing;
   revealing = (async () => {
     if (!S.theirs.size) {
-      for (const [k, v] of Object.entries(loadCache())) S.theirs.set(+k, v);
+      for (const [k, v] of Object.entries(loadCache())) {
+        if (!isBackfill(S.games.get(+k) || {})) S.theirs.set(+k, v);
+      }
     }
     const o = other();
     const todo = [...S.games.values()].filter(g =>
@@ -391,6 +404,40 @@ async function pick(gid, choice) {
   }
 }
 
+async function backfill(gid, p, choice) {
+  const g = S.games.get(gid);
+  if (!g || !isBackfill(g) || !S.players[p]) return;
+  const map = p === S.me ? S.mine : S.theirs;
+  const before = map.get(gid);
+  map.set(gid, choice);
+  S.tipped.add(`${gid}_${p}`);
+  delete S.note[gid];
+  render();
+  try {
+    const b = writeBatch(db);
+    b.set(doc(db, "picks", `${gid}_${p}`),
+      { game: String(gid), player: p, uid: S.players[p], choice, at: serverTimestamp() });
+    b.set(doc(db, "tipped", `${gid}_${p}`), { game: String(gid), player: p });
+    await b.commit();
+  } catch {
+    if (before) map.set(gid, before); else map.delete(gid);
+    S.note[gid] = "Konnte nicht gespeichert werden.";
+    render();
+  }
+}
+
+// Beim Öffnen der Nachtrage-Seite die Papiertipps des anderen frisch holen.
+async function refreshBackfill() {
+  const o = other();
+  await Promise.all([...S.games.values()].filter(isBackfill).map(async g => {
+    try {
+      const snap = await getDoc(doc(db, "picks", `${g.id}_${o}`));
+      if (snap.exists()) S.theirs.set(g.id, snap.data().choice);
+    } catch { /* gibt es noch nicht */ }
+  }));
+  render();
+}
+
 async function patchGame(gid, patch) {
   try {
     await updateDoc(doc(db, "games", String(gid)), patch);
@@ -411,6 +458,7 @@ document.addEventListener("click", e => {
   else if (act === "claim") claim(b.dataset.player);
   else if (act === "pick") pick(gid, b.dataset.choice);
   else if (act === "winner") patchGame(gid, { winner: b.dataset.choice });
+  else if (act === "backfill") backfill(gid, b.dataset.player, b.dataset.choice);
   else if (act === "sync") syncAll();
 });
 
@@ -430,7 +478,10 @@ document.addEventListener("submit", e => {
 document.addEventListener("change", e => {
   if (e.target.id === "w") location.hash = `#woche=${e.target.value}`;
 });
-window.addEventListener("hashchange", () => render());
+window.addEventListener("hashchange", () => {
+  if (location.hash === "#nachtragen" && S.me) refreshBackfill();
+  render();
+});
 
 function fail(err) {
   console.error(err);
@@ -481,8 +532,9 @@ function nav(week) {
         <label class="sr" for="w">Spielwoche</label>
         <select id="w">${opts}</select>
       </form>
+      ${backfillOpen() ? `<a href="#nachtragen" class="navlink">Papiertipps</a>` : ""}
       <a href="#tabelle" class="navlink">Tabelle</a>
-      <a href="#" class="navlink quiet" data-act="logout">${PLAYERS[S.me]} abmelden</a>
+      <a href="#" class="navlink quiet" data-act="logout">Abmelden</a>
     </nav>`;
 }
 
@@ -515,6 +567,7 @@ function render() {
     if (focus && focus.matches("input") && wrap.contains(focus)) return; // nicht beim Tippen stören
     const h = location.hash;
     if (h === "#tabelle") renderTable();
+    else if (h === "#nachtragen" && backfillOpen()) renderBackfill();
     else renderWeek(+(h.match(/woche=(\d+)/) || [])[1] || currentWeek());
   });
 }
@@ -664,5 +717,44 @@ function renderTable() {
         <p class="meta">${quelle}</p>
         <button data-act="sync">Jetzt aktualisieren</button>
       </div>
+    </section>`;
+}
+
+function renderBackfill() {
+  const games = [...S.games.values()].filter(isBackfill)
+    .sort((a, b) => a.kickoff - b.kickoff || a.id - b.id);
+  const missing = p => games.filter(g => !(p === S.me ? S.mine : S.theirs).has(g.id)).length;
+  const rows = [];
+  let lastWeek = null;
+  for (const g of games) {
+    if (g.week !== lastWeek) { rows.push(`<li class="dayhead">Woche ${g.week}</li>`); lastWeek = g.week; }
+    const b = berlin(g.kickoff);
+    const sieger = g.winner ? (g.winner === "tie" ? "Unentschieden" : esc(g[g.winner])) : "offen";
+    const line = p => {
+      const c = (p === S.me ? S.mine : S.theirs).get(g.id);
+      const btn = side => `<button class="bf${c === side ? " chosen" : ""}${g.winner === side ? " won" : ""}"
+        data-act="backfill" data-game="${g.id}" data-player="${p}" data-choice="${side}"
+        ${S.players[p] ? "" : "disabled"}>${esc(g[side])}</button>`;
+      return `<div class="bfline"><span class="bfname ${p}">${PLAYERS[p]}</span>${btn("away")}${btn("home")}</div>`;
+    };
+    const note = S.note[g.id] ? `<p class="meta rownote">${esc(S.note[g.id])}</p>` : "";
+    rows.push(`<li class="game bfgame">
+      <p class="bfhead"><span>${b.wd} ${b.day}</span> ${esc(g.away)} @ ${esc(g.home)}
+        ${g.away_score != null ? `<span class="bfscore">${g.away_score}:${g.home_score}</span>` : ""}
+        <span class="bfwin">Sieger ${sieger}</span></p>
+      ${line("anni")}${line("olaf")}${note}
+    </li>`);
+  }
+  const fehlt = Object.keys(PLAYERS).map(p => `${PLAYERS[p]} ${missing(p) ? `${missing(p)} offen` : "komplett"}`).join(" · ");
+  const ohne = Object.keys(PLAYERS).filter(p => !S.players[p]);
+  document.title = "Papiertipps - Tippspiel";
+  wrap.innerHTML = nav(currentWeek()) + `
+    <section class="week">
+      <h2>Papiertipps<span class="wsub">${fehlt}</span></h2>
+      <p class="meta bfintro">Die Tipps vom Papier für die Spiele vor dem Start der App.
+        Einer von euch kann beide eintragen, jeder Klick wird sofort gespeichert und zählt
+        gleich in der Tabelle. Möglich bis einschließlich 17.10.2026.
+        ${ohne.length ? `<br>${ohne.map(p => PLAYERS[p]).join(", ")} muss sich zuerst einmal anmelden.` : ""}</p>
+      <ul class="games">${rows.join("")}</ul>
     </section>`;
 }

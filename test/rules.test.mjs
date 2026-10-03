@@ -94,3 +94,19 @@ test("erster Platz auf leerer Datenbank", async () => {
   await assertFails(setDoc(doc(as("uA"), "meta/players"), { anni: "uX" }));
   await assertSucceeds(setDoc(doc(as("uA"), "meta/players"), { anni: "uA" }));
 });
+
+test("Papiertipps nachtragen: alte Spiele, auch für den anderen", async () => {
+  const old = Timestamp.fromDate(new Date("2026-09-13T17:00:00Z"));
+  await env.withSecurityRulesDisabled(async c => {
+    await setDoc(doc(c.firestore(), "games/5"), game({ kickoff: old, winner: "home", status: "post" }));
+  });
+  const ok = Date.now() < Date.UTC(2026, 9, 18);   // Fenster bis 18.10.2026
+  const check = ok ? assertSucceeds : assertFails;
+  await check(setDoc(doc(as("uO"), "picks/5_anni"), pick("5", "anni", "uA", "away")));
+  await check(setDoc(doc(as("uO"), "picks/5_olaf"), pick("5", "olaf", "uO", "home")));
+  await check(setDoc(doc(as("uO"), "tipped/5_anni"), { game: "5", player: "anni" }));
+  // falsche uid, Fremde und neuere Spiele bleiben gesperrt
+  await assertFails(setDoc(doc(as("uO"), "picks/5_anni"), pick("5", "anni", "uO", "away")));
+  await assertFails(setDoc(doc(as("uX"), "picks/5_olaf"), pick("5", "olaf", "uX", "home")));
+  await assertFails(setDoc(doc(as("uO"), "picks/2_olaf"), pick("2", "olaf", "uO")));
+});

@@ -20,6 +20,9 @@ die Ergebnisse kommen live von ESPN. Kostenlos, kein eigener Server.
   16–18) und Playoff-Paarungen kommen ebenfalls von ESPN
 - **Auswertung** in der Tabelle: Trefferquote, Wochensiege, Bilanz je Woche
 - Fällt ESPN aus, kann man Sieger, Zeit und Paarung per Hand eintragen
+- **Papiertipps:** Die Tipps für die Spiele vor dem Start der App (Wochen
+  1–3 und das Donnerstagsspiel der Woche 4) lassen sich bis einschließlich
+  17.10.2026 unter *Papiertipps* nachtragen, auch für den anderen
 - Alle Zeiten in deutscher Zeit
 
 ## Was drin ist

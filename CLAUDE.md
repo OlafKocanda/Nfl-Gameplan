@@ -49,6 +49,11 @@ Zeiten als Firestore-Timestamp (UTC), Anzeige in `Europe/Berlin` über `Intl`.
    `started()` in app.js müssen dasselbe sagen: Anpfiff vorbei *oder*
    Ergebnis eingetragen *oder* ESPN meldet `in`/`post`. Spiele ohne
    Anstoßzeit sind offen, bis eins davon eintritt.
+   Einzige Ausnahme: Papiertipps. Spiele mit Anpfiff vor dem 3.10.2026
+   lassen sich bis 18.10.2026 (UTC) nachtragen, auch für den anderen
+   (`isBackfill()` in den Regeln, `BACKFILL_BEFORE`/`BACKFILL_UNTIL` in
+   app.js, Seite `#nachtragen`). Danach greift die Ausnahme von selbst nicht
+   mehr; Regeln und Seite können dann raus.
 3. Ein Punkt pro richtigem Sieger. Unentschieden gibt niemandem einen Punkt.
 4. Jede sichtbare Zeichenkette ist deutsch.
 

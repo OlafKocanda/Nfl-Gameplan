@@ -11,6 +11,9 @@ rules_version = '2';
 // Regeln, die nicht kaputtgehen dürfen:
 // 1. Einen fremden Tipp kann man erst nach Anpfiff lesen.
 // 2. Nach Anpfiff (oder mit Ergebnis) nimmt niemand mehr einen Tipp an.
+//    Einzige Ausnahme: Papiertipps für die Spiele vor dem Start der App
+//    (Anpfiff vor dem 3.10.2026) lassen sich bis zum 18.10.2026 nachtragen,
+//    auch für den anderen.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -34,6 +37,13 @@ service cloud.firestore {
       return g.get('winner', null) == null
         && !(g.get('status', null) in ['in', 'post'])
         && (g.get('kickoff', null) == null || request.time < g.kickoff);
+    }
+
+    // Papiertipps: Spiele vor dem Start der App, nachtragbar bis 18.10.
+    function isBackfill(g) {
+      return g.get('kickoff', null) != null
+        && g.kickoff < timestamp.date(2026, 10, 3)
+        && request.time < timestamp.date(2026, 10, 18);
     }
 
     match /meta/players {
@@ -78,6 +88,13 @@ service cloud.firestore {
         && request.resource.data.choice in ['away', 'home']
         && request.resource.data.keys().hasOnly(['game', 'player', 'uid', 'choice', 'at'])
         && isOpen(game(request.resource.data.game));
+      allow create, update: if isAnyPlayer()
+        && request.resource.data.player in ['anni', 'olaf']
+        && pid == request.resource.data.game + '_' + request.resource.data.player
+        && request.resource.data.uid == players().get(request.resource.data.player, '')
+        && request.resource.data.choice in ['away', 'home']
+        && request.resource.data.keys().hasOnly(['game', 'player', 'uid', 'choice', 'at'])
+        && isBackfill(game(request.resource.data.game));
       allow delete: if false;
     }
 
@@ -87,6 +104,11 @@ service cloud.firestore {
         && tid == request.resource.data.game + '_' + request.resource.data.player
         && request.resource.data.keys().hasOnly(['game', 'player'])
         && isOpen(game(request.resource.data.game));
+      allow create, update: if isAnyPlayer()
+        && request.resource.data.player in ['anni', 'olaf']
+        && tid == request.resource.data.game + '_' + request.resource.data.player
+        && request.resource.data.keys().hasOnly(['game', 'player'])
+        && isBackfill(game(request.resource.data.game));
       allow delete: if false;
     }
   }
