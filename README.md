@@ -1,103 +1,129 @@
 # Tippspiel Anni vs. Olaf — NFL 2026/27
 
-Eine kleine Web-App zum Tippen der NFL-Sieger. Ein Container, SQLite als
-Datenbank, kein Account bei irgendwem. Ergebnisse kommen live von ESPN.
+Eine kleine Web-App zum Tippen der NFL-Sieger. Eine statische Seite auf
+GitHub Pages, die Tipps liegen dauerhaft in Google Firebase (Firestore),
+die Ergebnisse kommen live von ESPN. Kostenlos, kein eigener Server.
 
 - Alle 272 Spiele der Regular Season plus 13 Playoff-Slots
-- Anmeldung mit Namen und einem gemeinsamen Zugangscode
+- Anmeldung mit Google. Beim ersten Mal legt man fest, wer man ist
+  (Anni oder Olaf), danach ist der Platz fest und ein drittes Konto kommt
+  nicht mehr rein
 - Ein Klick pro Spiel, wird sofort gespeichert
 - **Tipps sind bis zum Anpfiff geheim.** Man sieht, *dass* der andere
-  getippt hat, aber nicht *was*
+  getippt hat, aber nicht *was*. Das erzwingt die Datenbank selbst
+  (`firestore.rules`), nicht nur die Oberfläche
 - Nach Anpfiff ist der Tipp gesperrt
 - **Live-Ergebnisse:** Spielstand, Viertel und Uhr während des Spiels,
-  Sieger und Punkte automatisch nach Abpfiff. Die Seite lädt sich bei
-  laufenden Spielen jede Minute selbst neu
+  Sieger und Punkte automatisch nach Abpfiff. Während Spiele laufen,
+  aktualisiert sich die Seite jede Minute
 - Anstoßzeiten (auch verlegte und die erst spät festgelegten in Woche
-  16–18) und Playoff-Paarungen übernimmt die App ebenfalls von ESPN
+  16–18) und Playoff-Paarungen kommen ebenfalls von ESPN
 - **Auswertung** in der Tabelle: Trefferquote, Wochensiege, Bilanz je Woche
-- Fällt ESPN aus, kann man Sieger, Zeit und Paarung weiter per Hand eintragen
-- Alle Zeiten in mitteleuropäischer Zeit, Nachtspiele auf dem Folgetag
+- Fällt ESPN aus, kann man Sieger, Zeit und Paarung per Hand eintragen
+- Alle Zeiten in deutscher Zeit
 
 ## Was drin ist
 
 ```
-app.py              die ganze Anwendung
+index.html          die Seite
+app.js              die ganze Anwendung
+app.css             Stylesheet
+firebase-config.js  Zugangsdaten der Firebase-Web-App (nicht geheim)
+firestore.rules     Sicherheitsregeln der Datenbank
 schedule.json       der Spielplan, 285 Spiele
 gen_schedule.py     erzeugt schedule.json neu
 check_schedule.py   prüft den Spielplan auf Vollständigkeit
-static/             CSS und ein paar Zeilen JavaScript
-Dockerfile          Image-Bau
-docker-compose.yml  für die Synology
-push-to-github.sh   legt das Repo an und pusht es
-CLAUDE.md           Projektkontext für Claude Code
+test/               Tests für die Sicherheitsregeln
 ```
 
-Die Daten liegen ausschließlich in `$DATA_DIR/tippspiel.db`, Standard
-`/data`. Das muss ein Volume sein, sonst sind die Tipps nach einem
-Neustart weg.
+## Einrichten (einmalig, ca. 10 Minuten)
 
-## Konfiguration
+### 1. Firebase-Projekt
 
-| Variable | Pflicht | Bedeutung |
-|---|---|---|
-| `ZUGANGSCODE` | ja | gemeinsames Passwort für Anni und Olaf |
-| `SECRET_KEY` | nein | Sitzungsschlüssel. Ohne Angabe wird einmalig einer erzeugt und in `$DATA_DIR/secret.key` abgelegt |
-| `DATA_DIR` | nein | Datenverzeichnis, Standard `/data` |
-| `PORT` | nein | Standard 8000 |
-| `TZ` | nein | `Europe/Vienna` |
-| `LIVE_ERGEBNISSE` | nein | `0` schaltet den ESPN-Abgleich ab, Standard an |
+1. <https://console.firebase.google.com> → **Projekt hinzufügen**, Name
+   z. B. `nfl-tippspiel`, Google Analytics ausschalten.
+2. **Build → Authentication → Jetzt starten**, unter *Anmeldeanbieter*
+   **Google** aktivieren und speichern.
+3. Ebenfalls unter *Authentication* → **Einstellungen → Autorisierte
+   Domains** → `olafkocanda.github.io` hinzufügen. Ohne das schlägt die
+   Google-Anmeldung auf der Website fehl.
+4. **Build → Firestore Database → Datenbank erstellen**, Standort
+   `europe-west3 (Frankfurt)`, **Produktionsmodus**.
+5. Im Firestore-Bereich den Reiter **Regeln** öffnen, den Inhalt durch den
+   von [`firestore.rules`](firestore.rules) ersetzen und **Veröffentlichen**.
+6. **Projekteinstellungen** (Zahnrad) → *Allgemein* → *Meine Apps* →
+   Web-App hinzufügen (`</>`), Name egal, *kein* Firebase Hosting. Die
+   angezeigten Werte in [`firebase-config.js`](firebase-config.js) eintragen.
+
+Der kostenlose Spark-Tarif reicht bei Weitem, eine Kreditkarte ist nicht
+nötig.
+
+### 2. GitHub Pages
+
+Im Repo auf GitHub: **Settings → Pages → Build and deployment** →
+*Source* „Deploy from a branch“, Branch `main`, Ordner `/ (root)` →
+**Save**. Nach ein, zwei Minuten läuft die Seite unter
+`https://olafkocanda.github.io/Nfl-Gameplan/`.
+
+### 3. Erster Start
+
+Anni und Olaf öffnen die Seite, melden sich mit Google an und wählen
+einmal ihren Namen. Beim allerersten Start schreibt die App den Spielplan
+in die Datenbank und holt die bisherigen Ergebnisse von ESPN.
 
 ## Live-Ergebnisse
 
-Die App fragt die öffentliche Scoreboard-Schnittstelle von ESPN ab
-(`site.api.espn.com`, ohne Schlüssel). Während Spiele laufen jede Minute,
-sonst alle 15 Minuten, und nur die Wochen, in denen noch etwas offen ist.
-Unter *Tabelle* steht, wann zuletzt abgeglichen wurde, dort gibt es auch
-den Knopf *Jetzt aktualisieren*.
+Die Seite fragt die öffentliche Scoreboard-Schnittstelle von ESPN direkt
+aus dem Browser ab (`site.api.espn.com`, ohne Schlüssel): jede Minute,
+solange Spiele laufen, sonst alle 15 Minuten, und nur die Wochen, in denen
+noch etwas offen ist. Neue Stände schreibt sie in die Datenbank, so sieht
+der andere sie sofort. Ist niemand auf der Seite, holt der nächste Besuch
+alles nach.
 
-Die Schnittstelle ist inoffiziell. Ändert ESPN etwas daran, steht der
-Fehler im Container-Log und man trägt Sieger so lange per Hand ein.
+Die Schnittstelle ist inoffiziell. Ändert ESPN etwas daran, trägt man
+Sieger so lange per Hand ein. Unter *Tabelle* steht, wann zuletzt
+abgeglichen wurde, dort gibt es auch *Jetzt aktualisieren*.
 
-## Auf der Synology einrichten
+## Punkte
 
-1. In der DSM-Dateistation einen Ordner `tippspiel` unter dem gemeinsamen
-   Ordner `docker` anlegen, also `/volume1/docker/tippspiel`, und alle
-   Dateien hineinkopieren. Du kannst auch die ZIP hochladen und per
-   Rechtsklick → Entpacken direkt auf dem NAS auspacken.
-2. In `docker-compose.yml` den `ZUGANGSCODE` ändern. Mehr ist nicht nötig.
-3. **Container Manager** öffnen → links **Projekt** → **Erstellen**.
-   Projektname `tippspiel`, als Pfad den Ordner aus Schritt 1 wählen. DSM
-   erkennt die `docker-compose.yml` und fragt, ob sie verwendet werden
-   soll — bestätigen, dann **Weiter** und **Fertig**. Der erste Build
-   dauert ein paar Minuten, weil das Python-Image geladen wird.
-4. Läuft danach unter `http://<NAS-IP>:8420`. Wenn nichts kommt: in der
-   Systemsteuerung unter *Sicherheit → Firewall* prüfen, ob Port 8420 im
-   lokalen Netz erlaubt ist.
+Ein Punkt pro richtig getipptem Sieger, Regular Season und Playoffs gleich
+gewichtet. Bei Unentschieden bekommt niemand einen Punkt, wer nicht
+getippt hat auch nicht.
 
-Die Datenbank landet in `/volume1/docker/tippspiel/data/` und wird damit
-von einer Hyper-Backup-Sicherung des `docker`-Ordners mitgenommen.
+## Sicherheit
 
-### Von unterwegs erreichbar machen
+`firebase-config.js` ist nicht geheim, die Werte stehen in jeder
+ausgelieferten Seite. Geschützt sind die Daten über `firestore.rules`:
 
-Der Container hört nur im Heimnetz. Zwei kostenlose Wege nach draußen,
-ohne Ports in der Fritzbox zu öffnen:
+- Lesen und Schreiben nur für die beiden eingetragenen Google-Konten
+- Einen fremden Tipp liefert die Datenbank erst nach Anpfiff aus
+- Tipps nach Anpfiff, bei laufendem Spiel oder mit Ergebnis lehnt sie ab
+- Tipps für den anderen lehnt sie ab
 
-- **Cloudflare Tunnel** — ergibt eine feste HTTPS-Adresse, läuft als
-  zweiter Container daneben, braucht eine eigene Domain bei Cloudflare.
-- **Tailscale** — kostenlos für private Nutzung, kein DNS und keine
-  Domain nötig, aber beide brauchen die App auf dem Handy.
+Zwischen Anni und Olaf gibt es bewusst keine Rollen: beide können Sieger,
+Anstoßzeiten und Paarungen eintragen. Suchmaschinen sind per `noindex`
+ausgeschlossen.
 
-Wenn ihr nur zu Hause tippt, braucht es nichts davon.
+Einen Platz neu vergeben (z. B. anderes Google-Konto): in der
+Firebase-Konsole unter Firestore das Dokument `meta/players` bearbeiten.
 
 ## Lokal entwickeln
 
 ```bash
-pip install -r requirements.txt
-ZUGANGSCODE=test uvicorn app:app --reload --port 8000
+npm install
+npx firebase emulators:start --only firestore,auth --project demo-tippspiel
+npx http-server -p 5000 -c-1 .
 ```
 
-`DATA_DIR` zeigt dann auf `./data`. Zum Zurücksetzen das Verzeichnis
-löschen, der Spielplan wird beim nächsten Start neu importiert.
+Dann `http://localhost:5000/?emu=anni@test.de` öffnen (ein zweites
+Fenster mit `?emu=olaf@test.de`). Mit `?emu=` spricht die Seite nur mit
+dem lokalen Emulator, die Anmeldung braucht kein echtes Google-Konto.
+
+Sicherheitsregeln testen:
+
+```bash
+npm test
+```
 
 Nach Änderungen am Spielplan:
 
@@ -108,76 +134,5 @@ python3 gen_schedule.py && python3 check_schedule.py
 `check_schedule.py` prüft 272 Spiele, 17 Spiele und eine Bye-Week je
 Team, Heimspiele NFC 9 / AFC 8, alle 48 Divisionsduelle doppelt mit je
 einem Heimspiel, und dass kein Team zweimal in derselben Woche steht.
-
-## Ins eigene Git bringen
-
-1. Auf github.com ein **leeres, privates** Repo anlegen — ohne README,
-   ohne .gitignore, ohne Lizenz.
-2. Einmalig, falls Git dich noch nicht kennt:
-
-   ```bash
-   git config --global user.name "Olaf"
-   git config --global user.email "deine@mail.de"
-   ```
-
-3. Im Projektordner:
-
-   ```bash
-   ./push-to-github.sh git@github.com:DEIN-NAME/nfl-tippspiel.git
-   ```
-
-Später genügt `git add -A && git commit -m "..." && git push`.
-
-Nicht im Repo landen durch die `.gitignore`: `data/` mit der Datenbank,
-der Sitzungsschlüssel und alle `.pyc`-Dateien.
-
-## Mit Claude Code weiterbauen
-
-```bash
-cd /pfad/zu/tippspiel
-claude
-```
-
-Es gibt keinen Upload — Claude Code liest das Verzeichnis direkt. Die
-`CLAUDE.md` wird beim Start automatisch gelesen und enthält Datenmodell,
-die Regeln, die nicht kaputtgehen dürfen, und was noch offen ist.
-
-Auf NixOS funktioniert der übliche `curl | bash`-Installer nicht, weil
-der Standard-Linker unter `/lib64` fehlt. Stattdessen:
-
-```bash
-nix-shell -p claude-code
-```
-
-Oder dauerhaft in der `configuration.nix`:
-
-```nix
-environment.systemPackages = [ pkgs.claude-code ];
-nixpkgs.config.allowUnfreePredicate = pkg:
-  builtins.elem (lib.getName pkg) [ "claude-code" ];
-```
-
-## Nach der Auslosung nachtragen
-
-Manches legt die NFL erst im Saisonverlauf fest. Das kommt normalerweise
-automatisch von ESPN, lässt sich aber auch in der Oberfläche eintragen:
-
-- **Anstoßzeit fehlt** (24 Spiele in Woche 16, 17 und ganz Woche 18) — in
-  der Spielzeile steht ein Datumsfeld. Erst mit eingetragener Zeit greift
-  die Sperre zum Anpfiff.
-- **Playoff-Paarung fehlt** — in den Ansichten Wild Card, Divisional,
-  Conference und Super Bowl stehen leere Slots für die Team-Kürzel.
-
-## Punkte
-
-Ein Punkt pro richtig getipptem Sieger, Regular Season und Playoffs gleich
-gewichtet. Bei Unentschieden bekommt niemand einen Punkt, wer nicht
-getippt hat auch nicht.
-
-## Zugriff
-
-Keine Nutzerverwaltung, keine Rollen: wer Link und Zugangscode hat, kommt
-rein und kann als Anni oder als Olaf tippen. Bei zwei Leuten, die sich
-vertrauen, ist das Absicht. Wenn die App öffentlich erreichbar ist, nimm
-einen Code, den niemand errät. Suchmaschinen sind per `noindex`
-ausgeschlossen.
+Steht der Spielplan schon in der Datenbank, muss man geänderte Spiele dort
+anpassen (oder die Sammlung `games` löschen, dann legt die App sie neu an).

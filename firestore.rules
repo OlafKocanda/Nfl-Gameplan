@@ -1,0 +1,93 @@
+rules_version = '2';
+
+// Tippspiel Anni vs. Olaf
+//
+// meta/players   {anni: uid, olaf: uid} - wer sich zuerst als Anni bzw.
+//                Olaf einträgt, ist es. Danach ist der Platz fest.
+// games/{id}     Spielplan plus Stand, Ergebnis, Anstoßzeit
+// picks/{id}     der eigentliche Tipp, id = "<spiel>_<spieler>"
+// tipped/{id}    nur DASS getippt wurde, für die Anzeige beim anderen
+//
+// Regeln, die nicht kaputtgehen dürfen:
+// 1. Einen fremden Tipp kann man erst nach Anpfiff lesen.
+// 2. Nach Anpfiff (oder mit Ergebnis) nimmt niemand mehr einen Tipp an.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function players() {
+      return get(/databases/$(database)/documents/meta/players).data;
+    }
+    function isPlayer(p) {
+      return request.auth != null && p in ['anni', 'olaf']
+        && exists(/databases/$(database)/documents/meta/players)
+        && players().get(p, '') == request.auth.uid;
+    }
+    function isAnyPlayer() {
+      return isPlayer('anni') || isPlayer('olaf');
+    }
+    function game(gid) {
+      return get(/databases/$(database)/documents/games/$(gid)).data;
+    }
+    // Offen = noch nicht angepfiffen und kein Ergebnis.
+    function isOpen(g) {
+      return g.get('winner', null) == null
+        && !(g.get('status', null) in ['in', 'post'])
+        && (g.get('kickoff', null) == null || request.time < g.kickoff);
+    }
+
+    match /meta/players {
+      allow read: if request.auth != null;
+      // Einen freien Platz für sich selbst belegen, nichts sonst.
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['anni', 'olaf'])
+        && request.resource.data.size() == 1
+        && request.resource.data.values().hasOnly([request.auth.uid]);
+      allow update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['anni', 'olaf'])
+        && request.resource.data.diff(resource.data).changedKeys().size() == 0
+        && request.resource.data.diff(resource.data).removedKeys().size() == 0
+        && request.resource.data.diff(resource.data).addedKeys().size() == 1
+        && !resource.data.values().hasAny([request.auth.uid])
+        && request.resource.data.values().hasAny([request.auth.uid]);
+      allow delete: if false;
+    }
+
+    match /games/{gid} {
+      allow read: if isAnyPlayer();
+      allow create: if isAnyPlayer()
+        && request.resource.data.keys().hasOnly(['round', 'week', 'away', 'home',
+             'kickoff', 'date_hint', 'info', 'winner', 'espn_id', 'away_score',
+             'home_score', 'status', 'detail']);
+      allow update: if isAnyPlayer()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['away', 'home',
+             'kickoff', 'winner', 'espn_id', 'away_score', 'home_score', 'status', 'detail'])
+        // Die Anstoßzeit lässt sich nur verschieben, solange das Spiel offen ist.
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['kickoff'])
+            || isOpen(resource.data));
+      allow delete: if false;
+    }
+
+    match /picks/{pid} {
+      allow read: if request.auth != null
+        && (resource.data.uid == request.auth.uid
+            || (isAnyPlayer() && !isOpen(game(resource.data.game))));
+      allow create, update: if isPlayer(request.resource.data.player)
+        && pid == request.resource.data.game + '_' + request.resource.data.player
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.choice in ['away', 'home']
+        && request.resource.data.keys().hasOnly(['game', 'player', 'uid', 'choice', 'at'])
+        && isOpen(game(request.resource.data.game));
+      allow delete: if false;
+    }
+
+    match /tipped/{tid} {
+      allow read: if isAnyPlayer();
+      allow create, update: if isPlayer(request.resource.data.player)
+        && tid == request.resource.data.game + '_' + request.resource.data.player
+        && request.resource.data.keys().hasOnly(['game', 'player'])
+        && isOpen(game(request.resource.data.game));
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "nfl-tippspiel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-tippspiel \"node --test test/rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.4.0",
+    "firebase-tools": "^15.0.0"
+  }
+}
