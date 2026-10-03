@@ -292,3 +292,18 @@ code { font-size: .92em; }
 }
 .toggle.on { color: var(--card); background: var(--ink); border-color: var(--ink); }
 .wpnote { padding-left: 0; margin-top: 10px; }
+
+/* ---------------------------------------------------------------- Anleitung */
+.steps { list-style: none; margin: 0 0 22px; padding: 0; }
+.step { display: flex; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.step:first-child { border-top: 1px solid var(--rule); }
+.step .num {
+  flex: none; width: 28px; height: 28px; margin-right: 14px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: var(--card); background: var(--ink);
+}
+.step h3 { margin: 2px 0 3px; font-size: 16px; letter-spacing: -.01em; }
+.step p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+.go { width: 100%; }
+.helplink { padding-left: 0; margin-top: 14px; }
+.helplink a { color: var(--ink-2); }

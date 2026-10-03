@@ -512,6 +512,10 @@ document.addEventListener("click", e => {
   else if (act === "winner") patchGame(gid, { winner: b.dataset.choice });
   else if (act === "backfill") backfill(gid, b.dataset.player, b.dataset.choice);
   else if (act === "sync") syncAll();
+  else if (act === "intro-done") {
+    try { localStorage.setItem("tippspiel:intro", "1"); } catch {}
+    if (location.hash === "#hilfe") location.hash = ""; else render();
+  }
   else if (act === "wp") {
     S.showWp = !S.showWp;
     try { localStorage.setItem("tippspiel:wp", S.showWp ? "1" : "0"); } catch {}
@@ -623,7 +627,10 @@ function render() {
     const focus = document.activeElement;
     if (focus && focus.matches("input") && wrap.contains(focus)) return; // nicht beim Tippen stören
     const h = location.hash;
-    if (h === "#tabelle") renderTable();
+    let seen = true;
+    try { seen = localStorage.getItem("tippspiel:intro") === "1"; } catch {}
+    if (h === "#hilfe" || !seen) renderIntro();
+    else if (h === "#tabelle") renderTable();
     else if (h === "#nachtragen" && backfillOpen()) renderBackfill();
     else renderWeek(+(h.match(/woche=(\d+)/) || [])[1] || currentWeek());
   });
@@ -666,6 +673,7 @@ function renderWeek(n) {
       <ul class="games">${rows.join("")}</ul>
       ${S.showWp ? `<p class="meta wpnote">Siegchance laut ESPN: vor dem Spiel die Prognose,
         während des Spiels live.</p>` : ""}
+      <p class="meta helplink"><a href="#hilfe">So funktioniert's</a></p>
     </section>`;
   ensureWp(n);
 }
@@ -824,4 +832,39 @@ function renderBackfill() {
         ${ohne.length ? `<br>${ohne.map(p => PLAYERS[p]).join(", ")} muss sich zuerst einmal anmelden.` : ""}</p>
       <ul class="games">${rows.join("")}</ul>
     </section>`;
+}
+
+function renderIntro() {
+  const o = PLAYERS[other()];
+  const step = (n, title, text) => `<li class="step"><span class="num">${n}</span>
+    <div><h3>${title}</h3><p>${text}</p></div></li>`;
+  document.title = "So funktioniert's - Tippspiel";
+  wrap.innerHTML = `
+    <header class="hero hero-login">
+      <h1>Hallo ${PLAYERS[S.me]}!</h1>
+      <p class="lede">So funktioniert das Tippspiel gegen ${o}, in einer Minute erklärt.</p>
+    </header>
+    <ol class="steps">
+      ${step(1, "Sieger antippen",
+        "Pro Spiel tippst du auf das Team, das deiner Meinung nach gewinnt. Gespeichert wird sofort, " +
+        "umentscheiden kannst du dich bis zum Anpfiff beliebig oft.")}
+      ${step(2, "Geheim bis zum Anpfiff",
+        `Du siehst nur, <em>dass</em> ${o} getippt hat, aber nicht was. Mit dem Anpfiff wird der Tipp ` +
+        "aufgedeckt und gesperrt, ab dann geht nichts mehr.")}
+      ${step(3, "Live mitfiebern",
+        "Spielstand, Viertel und Uhr kommen live von ESPN, die Seite aktualisiert sich von selbst. " +
+        "Nach Abpfiff zählt die App die Punkte: einer pro richtigem Sieger, bei Unentschieden keiner.")}
+      ${step(4, "Entscheidungshilfe",
+        "Unter jedem Team steht seine Bilanz, z. B. 3:0. Mit dem Knopf <strong>Siegchance</strong> " +
+        "blendest du zusätzlich die ESPN-Prognose ein.")}
+      ${step(5, "Woche wechseln & Tabelle",
+        "Oben links wählst du die Spielwoche, unter <strong>Tabelle</strong> stehen Trefferquote, " +
+        "Wochensiege und die Bilanz jeder Woche." +
+        (backfillOpen() ? " Unter <strong>Papiertipps</strong> tragt ihr die Tipps vom Zettel für die ersten Wochen nach." : ""))}
+      ${step(6, "Als App speichern",
+        "Im Browser auf Teilen bzw. ⋮ tippen und <strong>Zum Home-Bildschirm</strong> wählen, " +
+        "dann öffnet sich das Tippspiel wie eine App.")}
+    </ol>
+    <button class="go" data-act="intro-done">Los geht's</button>
+    <p class="meta helplink">Diese Anleitung findest du später unten auf jeder Spielwoche unter „So funktioniert's“.</p>`;
 }
