@@ -1,0 +1,10 @@
+data/
+__pycache__/
+*.pyc
+*.db
+.git/
+README.md
+CLAUDE.md
+gen_schedule.py
+check_schedule.py
+push-to-github.sh

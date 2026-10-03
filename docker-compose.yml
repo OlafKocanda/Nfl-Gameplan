@@ -1,0 +1,13 @@
+services:
+  tippspiel:
+    build: .
+    container_name: nfl-tippspiel
+    restart: unless-stopped
+    ports:
+      - "8420:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      # Diesen Code unbedingt aendern.
+      ZUGANGSCODE: "bitte-hier-euren-code"
+      TZ: "Europe/Vienna"

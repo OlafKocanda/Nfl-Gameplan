@@ -1,0 +1,2852 @@
+[
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "NE",
+  "home": "SEA",
+  "kickoff": "2026-09-10T00:20:00+00:00",
+  "date_hint": "2026-09-09",
+  "info": "NBC · Kickoff",
+  "id": 1
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "SF",
+  "home": "LAR",
+  "kickoff": "2026-09-11T00:35:00+00:00",
+  "date_hint": "2026-09-10",
+  "info": "Melbourne",
+  "id": 2
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "CHI",
+  "home": "CAR",
+  "kickoff": "2026-09-13T17:00:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "Fox",
+  "id": 3
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "TB",
+  "home": "CIN",
+  "kickoff": "2026-09-13T17:00:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "Fox",
+  "id": 4
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "BAL",
+  "home": "IND",
+  "kickoff": "2026-09-13T17:00:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "CBS",
+  "id": 5
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "BUF",
+  "home": "HOU",
+  "kickoff": "2026-09-13T17:00:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "CBS",
+  "id": 6
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "NO",
+  "home": "DET",
+  "kickoff": "2026-09-13T17:00:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "Fox",
+  "id": 7
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "NYJ",
+  "home": "TEN",
+  "kickoff": "2026-09-13T17:00:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "",
+  "id": 8
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "ATL",
+  "home": "PIT",
+  "kickoff": "2026-09-13T17:00:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "Fox",
+  "id": 9
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "CLE",
+  "home": "JAX",
+  "kickoff": "2026-09-13T17:00:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "CBS",
+  "id": 10
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "ARI",
+  "home": "LAC",
+  "kickoff": "2026-09-13T20:25:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "CBS",
+  "id": 11
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "GB",
+  "home": "MIN",
+  "kickoff": "2026-09-13T20:25:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "CBS",
+  "id": 12
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "MIA",
+  "home": "LV",
+  "kickoff": "2026-09-13T20:25:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "Fox",
+  "id": 13
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "WAS",
+  "home": "PHI",
+  "kickoff": "2026-09-13T20:25:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "Fox",
+  "id": 14
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "DAL",
+  "home": "NYG",
+  "kickoff": "2026-09-14T00:20:00+00:00",
+  "date_hint": "2026-09-13",
+  "info": "NBC · SNF",
+  "id": 15
+ },
+ {
+  "round": "REG",
+  "week": 1,
+  "away": "DEN",
+  "home": "KC",
+  "kickoff": "2026-09-15T00:15:00+00:00",
+  "date_hint": "2026-09-14",
+  "info": "ESPN · MNF",
+  "id": 16
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "DET",
+  "home": "BUF",
+  "kickoff": "2026-09-18T00:15:00+00:00",
+  "date_hint": "2026-09-17",
+  "info": "Prime · TNF",
+  "id": 17
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "MIN",
+  "home": "CHI",
+  "kickoff": "2026-09-20T17:00:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "Fox",
+  "id": 18
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "PHI",
+  "home": "TEN",
+  "kickoff": "2026-09-20T17:00:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "Fox",
+  "id": 19
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "GB",
+  "home": "NYJ",
+  "kickoff": "2026-09-20T17:00:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "Fox",
+  "id": 20
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "CAR",
+  "home": "ATL",
+  "kickoff": "2026-09-20T17:00:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "Fox",
+  "id": 21
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "NO",
+  "home": "BAL",
+  "kickoff": "2026-09-20T17:00:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "CBS",
+  "id": 22
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "CIN",
+  "home": "HOU",
+  "kickoff": "2026-09-20T17:00:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "CBS",
+  "id": 23
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "CLE",
+  "home": "TB",
+  "kickoff": "2026-09-20T17:00:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "CBS",
+  "id": 24
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "PIT",
+  "home": "NE",
+  "kickoff": "2026-09-20T17:00:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "CBS",
+  "id": 25
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "LV",
+  "home": "LAC",
+  "kickoff": "2026-09-20T20:05:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "CBS",
+  "id": 26
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "JAX",
+  "home": "DEN",
+  "kickoff": "2026-09-20T20:05:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "CBS",
+  "id": 27
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "WAS",
+  "home": "DAL",
+  "kickoff": "2026-09-20T20:25:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "Fox",
+  "id": 28
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "SEA",
+  "home": "ARI",
+  "kickoff": "2026-09-20T20:25:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "Fox",
+  "id": 29
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "MIA",
+  "home": "SF",
+  "kickoff": "2026-09-20T20:25:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "Fox",
+  "id": 30
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "IND",
+  "home": "KC",
+  "kickoff": "2026-09-21T00:20:00+00:00",
+  "date_hint": "2026-09-20",
+  "info": "NBC · SNF",
+  "id": 31
+ },
+ {
+  "round": "REG",
+  "week": 2,
+  "away": "NYG",
+  "home": "LAR",
+  "kickoff": "2026-09-22T00:15:00+00:00",
+  "date_hint": "2026-09-21",
+  "info": "ESPN · MNF",
+  "id": 32
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "ATL",
+  "home": "GB",
+  "kickoff": "2026-09-25T00:15:00+00:00",
+  "date_hint": "2026-09-24",
+  "info": "Prime · TNF",
+  "id": 33
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "KC",
+  "home": "MIA",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "CBS",
+  "id": 34
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "HOU",
+  "home": "IND",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "CBS",
+  "id": 35
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "TEN",
+  "home": "NYG",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "CBS",
+  "id": 36
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "NE",
+  "home": "JAX",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "CBS",
+  "id": 37
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "CIN",
+  "home": "PIT",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "CBS",
+  "id": 38
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "CAR",
+  "home": "CLE",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "Fox",
+  "id": 39
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "NYJ",
+  "home": "DET",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "Fox",
+  "id": 40
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "SEA",
+  "home": "WAS",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "Fox",
+  "id": 41
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "LAC",
+  "home": "BUF",
+  "kickoff": "2026-09-27T17:00:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "Fox",
+  "id": 42
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "MIN",
+  "home": "TB",
+  "kickoff": "2026-09-27T20:05:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "Fox",
+  "id": 43
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "ARI",
+  "home": "SF",
+  "kickoff": "2026-09-27T20:05:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "Fox",
+  "id": 44
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "BAL",
+  "home": "DAL",
+  "kickoff": "2026-09-27T20:25:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "Rio de Janeiro",
+  "id": 45
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "LV",
+  "home": "NO",
+  "kickoff": "2026-09-27T20:25:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "CBS",
+  "id": 46
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "LAR",
+  "home": "DEN",
+  "kickoff": "2026-09-28T00:20:00+00:00",
+  "date_hint": "2026-09-27",
+  "info": "NBC · SNF",
+  "id": 47
+ },
+ {
+  "round": "REG",
+  "week": 3,
+  "away": "PHI",
+  "home": "CHI",
+  "kickoff": "2026-09-29T00:15:00+00:00",
+  "date_hint": "2026-09-28",
+  "info": "ESPN · MNF",
+  "id": 48
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "PIT",
+  "home": "CLE",
+  "kickoff": "2026-10-02T00:15:00+00:00",
+  "date_hint": "2026-10-01",
+  "info": "Prime · TNF",
+  "id": 49
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "IND",
+  "home": "WAS",
+  "kickoff": "2026-10-04T13:30:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "London",
+  "id": 50
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "TEN",
+  "home": "BAL",
+  "kickoff": "2026-10-04T17:00:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "CBS",
+  "id": 51
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "ARI",
+  "home": "NYG",
+  "kickoff": "2026-10-04T17:00:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "CBS",
+  "id": 52
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "JAX",
+  "home": "CIN",
+  "kickoff": "2026-10-04T17:00:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "CBS",
+  "id": 53
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "NE",
+  "home": "BUF",
+  "kickoff": "2026-10-04T17:00:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "CBS",
+  "id": 54
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "DAL",
+  "home": "HOU",
+  "kickoff": "2026-10-04T17:00:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "Fox",
+  "id": 55
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "LAR",
+  "home": "PHI",
+  "kickoff": "2026-10-04T17:00:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "Fox",
+  "id": 56
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "GB",
+  "home": "TB",
+  "kickoff": "2026-10-04T17:00:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "Fox",
+  "id": 57
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "NYJ",
+  "home": "CHI",
+  "kickoff": "2026-10-04T17:00:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "Fox",
+  "id": 58
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "MIA",
+  "home": "MIN",
+  "kickoff": "2026-10-04T20:05:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "Fox",
+  "id": 59
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "DEN",
+  "home": "SF",
+  "kickoff": "2026-10-04T20:25:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "CBS",
+  "id": 60
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "LAC",
+  "home": "SEA",
+  "kickoff": "2026-10-04T20:25:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "CBS",
+  "id": 61
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "KC",
+  "home": "LV",
+  "kickoff": "2026-10-04T20:25:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "CBS",
+  "id": 62
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "DET",
+  "home": "CAR",
+  "kickoff": "2026-10-05T00:20:00+00:00",
+  "date_hint": "2026-10-04",
+  "info": "NBC · SNF",
+  "id": 63
+ },
+ {
+  "round": "REG",
+  "week": 4,
+  "away": "ATL",
+  "home": "NO",
+  "kickoff": "2026-10-06T00:15:00+00:00",
+  "date_hint": "2026-10-05",
+  "info": "ESPN · MNF",
+  "id": 64
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "TB",
+  "home": "DAL",
+  "kickoff": "2026-10-09T00:15:00+00:00",
+  "date_hint": "2026-10-08",
+  "info": "Prime · TNF",
+  "id": 65
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "PHI",
+  "home": "JAX",
+  "kickoff": "2026-10-11T13:30:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "London",
+  "id": 66
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "LV",
+  "home": "NE",
+  "kickoff": "2026-10-11T17:00:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "CBS",
+  "id": 67
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "HOU",
+  "home": "TEN",
+  "kickoff": "2026-10-11T17:00:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "CBS",
+  "id": 68
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "CLE",
+  "home": "NYJ",
+  "kickoff": "2026-10-11T17:00:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "CBS",
+  "id": 69
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "IND",
+  "home": "PIT",
+  "kickoff": "2026-10-11T17:00:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "CBS",
+  "id": 70
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "CIN",
+  "home": "MIA",
+  "kickoff": "2026-10-11T17:00:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "Fox",
+  "id": 71
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "MIN",
+  "home": "NO",
+  "kickoff": "2026-10-11T17:00:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "Fox",
+  "id": 72
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "NYG",
+  "home": "WAS",
+  "kickoff": "2026-10-11T17:00:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "Fox",
+  "id": 73
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "DEN",
+  "home": "LAC",
+  "kickoff": "2026-10-11T20:05:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "CBS",
+  "id": 74
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "CHI",
+  "home": "GB",
+  "kickoff": "2026-10-11T20:25:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "Fox",
+  "id": 75
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "DET",
+  "home": "ARI",
+  "kickoff": "2026-10-11T20:25:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "Fox",
+  "id": 76
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "SF",
+  "home": "SEA",
+  "kickoff": "2026-10-11T20:25:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "Fox",
+  "id": 77
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "BAL",
+  "home": "ATL",
+  "kickoff": "2026-10-12T00:20:00+00:00",
+  "date_hint": "2026-10-11",
+  "info": "NBC · SNF",
+  "id": 78
+ },
+ {
+  "round": "REG",
+  "week": 5,
+  "away": "BUF",
+  "home": "LAR",
+  "kickoff": "2026-10-13T00:15:00+00:00",
+  "date_hint": "2026-10-12",
+  "info": "ESPN · MNF",
+  "id": 79
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "SEA",
+  "home": "DEN",
+  "kickoff": "2026-10-16T00:15:00+00:00",
+  "date_hint": "2026-10-15",
+  "info": "Prime · TNF",
+  "id": 80
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "HOU",
+  "home": "JAX",
+  "kickoff": "2026-10-18T13:30:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "London",
+  "id": 81
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "NYJ",
+  "home": "NE",
+  "kickoff": "2026-10-18T17:00:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "CBS",
+  "id": 82
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "PIT",
+  "home": "TB",
+  "kickoff": "2026-10-18T17:00:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "CBS",
+  "id": 83
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "CAR",
+  "home": "PHI",
+  "kickoff": "2026-10-18T17:00:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "CBS",
+  "id": 84
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "CHI",
+  "home": "ATL",
+  "kickoff": "2026-10-18T17:00:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "Fox",
+  "id": 85
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "TEN",
+  "home": "IND",
+  "kickoff": "2026-10-18T17:00:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "Fox",
+  "id": 86
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "NO",
+  "home": "NYG",
+  "kickoff": "2026-10-18T17:00:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "Fox",
+  "id": 87
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "BAL",
+  "home": "CLE",
+  "kickoff": "2026-10-18T17:00:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "Fox",
+  "id": 88
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "ARI",
+  "home": "LAR",
+  "kickoff": "2026-10-18T20:05:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "Fox",
+  "id": 89
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "LAC",
+  "home": "KC",
+  "kickoff": "2026-10-18T20:25:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "CBS",
+  "id": 90
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "BUF",
+  "home": "LV",
+  "kickoff": "2026-10-18T20:25:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "CBS",
+  "id": 91
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "DAL",
+  "home": "GB",
+  "kickoff": "2026-10-19T00:20:00+00:00",
+  "date_hint": "2026-10-18",
+  "info": "NBC · SNF",
+  "id": 92
+ },
+ {
+  "round": "REG",
+  "week": 6,
+  "away": "WAS",
+  "home": "SF",
+  "kickoff": "2026-10-20T00:15:00+00:00",
+  "date_hint": "2026-10-19",
+  "info": "ESPN · MNF",
+  "id": 93
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "NE",
+  "home": "CHI",
+  "kickoff": "2026-10-23T00:15:00+00:00",
+  "date_hint": "2026-10-22",
+  "info": "Prime · TNF",
+  "id": 94
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "PIT",
+  "home": "NO",
+  "kickoff": "2026-10-25T13:30:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "Paris",
+  "id": 95
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "CLE",
+  "home": "TEN",
+  "kickoff": "2026-10-25T17:00:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "CBS",
+  "id": 96
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "MIA",
+  "home": "NYJ",
+  "kickoff": "2026-10-25T17:00:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "CBS",
+  "id": 97
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "IND",
+  "home": "MIN",
+  "kickoff": "2026-10-25T17:00:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "CBS",
+  "id": 98
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "CIN",
+  "home": "BAL",
+  "kickoff": "2026-10-25T17:00:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "CBS",
+  "id": 99
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "NYG",
+  "home": "HOU",
+  "kickoff": "2026-10-25T17:00:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "Fox",
+  "id": 100
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "TB",
+  "home": "CAR",
+  "kickoff": "2026-10-25T17:00:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "Fox",
+  "id": 101
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "SF",
+  "home": "ATL",
+  "kickoff": "2026-10-25T17:00:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "Fox",
+  "id": 102
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "DEN",
+  "home": "ARI",
+  "kickoff": "2026-10-25T20:05:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "CBS",
+  "id": 103
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "LAR",
+  "home": "LV",
+  "kickoff": "2026-10-25T20:25:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "Fox",
+  "id": 104
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "GB",
+  "home": "DET",
+  "kickoff": "2026-10-25T20:25:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "Fox",
+  "id": 105
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "KC",
+  "home": "SEA",
+  "kickoff": "2026-10-26T00:20:00+00:00",
+  "date_hint": "2026-10-25",
+  "info": "NBC · SNF",
+  "id": 106
+ },
+ {
+  "round": "REG",
+  "week": 7,
+  "away": "DAL",
+  "home": "PHI",
+  "kickoff": "2026-10-27T00:15:00+00:00",
+  "date_hint": "2026-10-26",
+  "info": "ESPN · MNF",
+  "id": 107
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "CAR",
+  "home": "GB",
+  "kickoff": "2026-10-30T00:15:00+00:00",
+  "date_hint": "2026-10-29",
+  "info": "Prime · TNF",
+  "id": 108
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "TEN",
+  "home": "CIN",
+  "kickoff": "2026-11-01T18:00:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "CBS",
+  "id": 109
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "IND",
+  "home": "JAX",
+  "kickoff": "2026-11-01T18:00:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "CBS",
+  "id": 110
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "CLE",
+  "home": "PIT",
+  "kickoff": "2026-11-01T18:00:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "CBS",
+  "id": 111
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "BAL",
+  "home": "BUF",
+  "kickoff": "2026-11-01T18:00:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "CBS",
+  "id": 112
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "ATL",
+  "home": "TB",
+  "kickoff": "2026-11-01T18:00:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "Fox",
+  "id": 113
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "MIN",
+  "home": "DET",
+  "kickoff": "2026-11-01T18:00:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "Fox",
+  "id": 114
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "ARI",
+  "home": "DAL",
+  "kickoff": "2026-11-01T18:00:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "Fox",
+  "id": 115
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "LV",
+  "home": "NYJ",
+  "kickoff": "2026-11-01T18:00:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "Fox",
+  "id": 116
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "LAC",
+  "home": "LAR",
+  "kickoff": "2026-11-01T21:05:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "Fox",
+  "id": 117
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "KC",
+  "home": "DEN",
+  "kickoff": "2026-11-01T21:25:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "CBS",
+  "id": 118
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "NE",
+  "home": "MIA",
+  "kickoff": "2026-11-01T21:25:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "CBS",
+  "id": 119
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "PHI",
+  "home": "WAS",
+  "kickoff": "2026-11-02T01:20:00+00:00",
+  "date_hint": "2026-11-01",
+  "info": "NBC · SNF",
+  "id": 120
+ },
+ {
+  "round": "REG",
+  "week": 8,
+  "away": "CHI",
+  "home": "SEA",
+  "kickoff": "2026-11-03T01:15:00+00:00",
+  "date_hint": "2026-11-02",
+  "info": "ESPN · MNF",
+  "id": 121
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "JAX",
+  "home": "BAL",
+  "kickoff": "2026-11-06T01:15:00+00:00",
+  "date_hint": "2026-11-05",
+  "info": "Prime · TNF",
+  "id": 122
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "CIN",
+  "home": "ATL",
+  "kickoff": "2026-11-08T14:30:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "Madrid",
+  "id": 123
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "NYJ",
+  "home": "KC",
+  "kickoff": "2026-11-08T18:00:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "CBS",
+  "id": 124
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "CLE",
+  "home": "NO",
+  "kickoff": "2026-11-08T18:00:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "CBS",
+  "id": 125
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "DEN",
+  "home": "CAR",
+  "kickoff": "2026-11-08T18:00:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "CBS",
+  "id": 126
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "DAL",
+  "home": "IND",
+  "kickoff": "2026-11-08T18:00:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "Fox",
+  "id": 127
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "DET",
+  "home": "MIA",
+  "kickoff": "2026-11-08T18:00:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "Fox",
+  "id": 128
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "NYG",
+  "home": "PHI",
+  "kickoff": "2026-11-08T18:00:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "Fox",
+  "id": 129
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "LAR",
+  "home": "WAS",
+  "kickoff": "2026-11-08T18:00:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "Fox",
+  "id": 130
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "LV",
+  "home": "SF",
+  "kickoff": "2026-11-08T21:05:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "CBS",
+  "id": 131
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "HOU",
+  "home": "LAC",
+  "kickoff": "2026-11-08T21:05:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "CBS",
+  "id": 132
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "ARI",
+  "home": "SEA",
+  "kickoff": "2026-11-08T21:25:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "Fox",
+  "id": 133
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "GB",
+  "home": "NE",
+  "kickoff": "2026-11-08T21:25:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "Fox",
+  "id": 134
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "TB",
+  "home": "CHI",
+  "kickoff": "2026-11-09T01:20:00+00:00",
+  "date_hint": "2026-11-08",
+  "info": "NBC · SNF",
+  "id": 135
+ },
+ {
+  "round": "REG",
+  "week": 9,
+  "away": "BUF",
+  "home": "MIN",
+  "kickoff": "2026-11-10T01:15:00+00:00",
+  "date_hint": "2026-11-09",
+  "info": "ESPN · MNF",
+  "id": 136
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "WAS",
+  "home": "NYG",
+  "kickoff": "2026-11-13T01:15:00+00:00",
+  "date_hint": "2026-11-12",
+  "info": "Prime · TNF",
+  "id": 137
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "NE",
+  "home": "DET",
+  "kickoff": "2026-11-15T14:30:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "München",
+  "id": 138
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "BUF",
+  "home": "NYJ",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "CBS",
+  "id": 139
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "MIA",
+  "home": "IND",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "CBS",
+  "id": 140
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "KC",
+  "home": "ATL",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "CBS",
+  "id": 141
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "MIN",
+  "home": "GB",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "Fox",
+  "id": 142
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "JAX",
+  "home": "TEN",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "Fox",
+  "id": 143
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "HOU",
+  "home": "CLE",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "Fox",
+  "id": 144
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "CAR",
+  "home": "NO",
+  "kickoff": "2026-11-15T18:00:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "Fox",
+  "id": 145
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "LAR",
+  "home": "ARI",
+  "kickoff": "2026-11-15T21:05:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "CBS",
+  "id": 146
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "SEA",
+  "home": "LV",
+  "kickoff": "2026-11-15T21:05:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "CBS",
+  "id": 147
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "SF",
+  "home": "DAL",
+  "kickoff": "2026-11-15T21:25:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "Fox",
+  "id": 148
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "PIT",
+  "home": "CIN",
+  "kickoff": "2026-11-16T01:20:00+00:00",
+  "date_hint": "2026-11-15",
+  "info": "NBC · SNF",
+  "id": 149
+ },
+ {
+  "round": "REG",
+  "week": 10,
+  "away": "LAC",
+  "home": "BAL",
+  "kickoff": "2026-11-17T01:15:00+00:00",
+  "date_hint": "2026-11-16",
+  "info": "ESPN · MNF",
+  "id": 150
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "IND",
+  "home": "HOU",
+  "kickoff": "2026-11-20T01:15:00+00:00",
+  "date_hint": "2026-11-19",
+  "info": "Prime · TNF",
+  "id": 151
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "ARI",
+  "home": "KC",
+  "kickoff": "2026-11-22T18:00:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "CBS",
+  "id": 152
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "TB",
+  "home": "DET",
+  "kickoff": "2026-11-22T18:00:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "CBS",
+  "id": 153
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "JAX",
+  "home": "NYG",
+  "kickoff": "2026-11-22T18:00:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "CBS",
+  "id": 154
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "MIA",
+  "home": "BUF",
+  "kickoff": "2026-11-22T18:00:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "Fox",
+  "id": 155
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "TEN",
+  "home": "DAL",
+  "kickoff": "2026-11-22T18:00:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "Fox",
+  "id": 156
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "BAL",
+  "home": "CAR",
+  "kickoff": "2026-11-22T18:00:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "Fox",
+  "id": 157
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "NO",
+  "home": "CHI",
+  "kickoff": "2026-11-22T18:00:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "Fox",
+  "id": 158
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "NYJ",
+  "home": "LAC",
+  "kickoff": "2026-11-22T21:05:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "Fox",
+  "id": 159
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "PIT",
+  "home": "PHI",
+  "kickoff": "2026-11-22T21:25:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "CBS",
+  "id": 160
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "LV",
+  "home": "DEN",
+  "kickoff": "2026-11-22T21:25:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "CBS",
+  "id": 161
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "MIN",
+  "home": "SF",
+  "kickoff": "2026-11-23T01:20:00+00:00",
+  "date_hint": "2026-11-22",
+  "info": "Mexico City",
+  "id": 162
+ },
+ {
+  "round": "REG",
+  "week": 11,
+  "away": "CIN",
+  "home": "WAS",
+  "kickoff": "2026-11-24T01:15:00+00:00",
+  "date_hint": "2026-11-23",
+  "info": "ESPN · MNF",
+  "id": 163
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "GB",
+  "home": "LAR",
+  "kickoff": "2026-11-26T01:00:00+00:00",
+  "date_hint": "2026-11-25",
+  "info": "Netflix · Thanksg.-Eve",
+  "id": 164
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "CHI",
+  "home": "DET",
+  "kickoff": "2026-11-26T18:00:00+00:00",
+  "date_hint": "2026-11-26",
+  "info": "CBS · Thanksgiving",
+  "id": 165
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "PHI",
+  "home": "DAL",
+  "kickoff": "2026-11-26T21:30:00+00:00",
+  "date_hint": "2026-11-26",
+  "info": "Fox · Thanksgiving",
+  "id": 166
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "KC",
+  "home": "BUF",
+  "kickoff": "2026-11-27T01:20:00+00:00",
+  "date_hint": "2026-11-26",
+  "info": "NBC · Thanksgiving",
+  "id": 167
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "DEN",
+  "home": "PIT",
+  "kickoff": "2026-11-27T20:00:00+00:00",
+  "date_hint": "2026-11-27",
+  "info": "Prime · Black Friday",
+  "id": 168
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "BAL",
+  "home": "HOU",
+  "kickoff": "2026-11-29T18:00:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "CBS",
+  "id": 169
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "NO",
+  "home": "CIN",
+  "kickoff": "2026-11-29T18:00:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "CBS",
+  "id": 170
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "NYJ",
+  "home": "MIA",
+  "kickoff": "2026-11-29T18:00:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "CBS",
+  "id": 171
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "ATL",
+  "home": "MIN",
+  "kickoff": "2026-11-29T18:00:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "Fox",
+  "id": 172
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "NYG",
+  "home": "IND",
+  "kickoff": "2026-11-29T18:00:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "Fox",
+  "id": 173
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "LV",
+  "home": "CLE",
+  "kickoff": "2026-11-29T18:00:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "Fox",
+  "id": 174
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "TEN",
+  "home": "JAX",
+  "kickoff": "2026-11-29T21:05:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "CBS",
+  "id": 175
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "WAS",
+  "home": "ARI",
+  "kickoff": "2026-11-29T21:25:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "Fox",
+  "id": 176
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "SEA",
+  "home": "SF",
+  "kickoff": "2026-11-29T21:25:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "Fox",
+  "id": 177
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "NE",
+  "home": "LAC",
+  "kickoff": "2026-11-30T01:20:00+00:00",
+  "date_hint": "2026-11-29",
+  "info": "NBC · SNF",
+  "id": 178
+ },
+ {
+  "round": "REG",
+  "week": 12,
+  "away": "CAR",
+  "home": "TB",
+  "kickoff": "2026-12-01T01:15:00+00:00",
+  "date_hint": "2026-11-30",
+  "info": "ESPN · MNF",
+  "id": 179
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "KC",
+  "home": "LAR",
+  "kickoff": "2026-12-04T01:15:00+00:00",
+  "date_hint": "2026-12-03",
+  "info": "Prime · TNF",
+  "id": 180
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "DET",
+  "home": "ATL",
+  "kickoff": "2026-12-06T18:00:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "CBS",
+  "id": 181
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "LAC",
+  "home": "TB",
+  "kickoff": "2026-12-06T18:00:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "CBS",
+  "id": 182
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "WAS",
+  "home": "TEN",
+  "kickoff": "2026-12-06T18:00:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "CBS",
+  "id": 183
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "CIN",
+  "home": "CLE",
+  "kickoff": "2026-12-06T18:00:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "CBS",
+  "id": 184
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "SF",
+  "home": "NYG",
+  "kickoff": "2026-12-06T18:00:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "Fox",
+  "id": 185
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "GB",
+  "home": "NO",
+  "kickoff": "2026-12-06T18:00:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "Fox",
+  "id": 186
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "JAX",
+  "home": "CHI",
+  "kickoff": "2026-12-06T18:00:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "Fox",
+  "id": 187
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "PHI",
+  "home": "ARI",
+  "kickoff": "2026-12-06T21:05:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "Fox",
+  "id": 188
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "MIA",
+  "home": "DEN",
+  "kickoff": "2026-12-06T21:05:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "Fox",
+  "id": 189
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "CAR",
+  "home": "MIN",
+  "kickoff": "2026-12-06T21:25:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "CBS",
+  "id": 190
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "BUF",
+  "home": "NE",
+  "kickoff": "2026-12-06T21:25:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "CBS",
+  "id": 191
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "HOU",
+  "home": "PIT",
+  "kickoff": "2026-12-07T01:20:00+00:00",
+  "date_hint": "2026-12-06",
+  "info": "NBC · SNF",
+  "id": 192
+ },
+ {
+  "round": "REG",
+  "week": 13,
+  "away": "DAL",
+  "home": "SEA",
+  "kickoff": "2026-12-08T01:15:00+00:00",
+  "date_hint": "2026-12-07",
+  "info": "ESPN · MNF",
+  "id": 193
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "MIN",
+  "home": "NE",
+  "kickoff": "2026-12-11T01:15:00+00:00",
+  "date_hint": "2026-12-10",
+  "info": "Prime · TNF",
+  "id": 194
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "DEN",
+  "home": "NYJ",
+  "kickoff": "2026-12-13T18:00:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "CBS",
+  "id": 195
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "ATL",
+  "home": "CLE",
+  "kickoff": "2026-12-13T18:00:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "CBS",
+  "id": 196
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "CHI",
+  "home": "MIA",
+  "kickoff": "2026-12-13T18:00:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "CBS",
+  "id": 197
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "HOU",
+  "home": "WAS",
+  "kickoff": "2026-12-13T18:00:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "CBS",
+  "id": 198
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "NO",
+  "home": "CAR",
+  "kickoff": "2026-12-13T18:00:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "CBS",
+  "id": 199
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "IND",
+  "home": "PHI",
+  "kickoff": "2026-12-13T18:00:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "Fox",
+  "id": 200
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "TB",
+  "home": "BAL",
+  "kickoff": "2026-12-13T18:00:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "Fox",
+  "id": 201
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "TEN",
+  "home": "DET",
+  "kickoff": "2026-12-13T18:00:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "Fox",
+  "id": 202
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "LAC",
+  "home": "LV",
+  "kickoff": "2026-12-13T21:05:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "CBS",
+  "id": 203
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "KC",
+  "home": "CIN",
+  "kickoff": "2026-12-13T21:25:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "Fox",
+  "id": 204
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "LAR",
+  "home": "SF",
+  "kickoff": "2026-12-13T21:25:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "Fox",
+  "id": 205
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "NYG",
+  "home": "SEA",
+  "kickoff": "2026-12-13T21:25:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "Fox",
+  "id": 206
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "BUF",
+  "home": "GB",
+  "kickoff": "2026-12-14T01:20:00+00:00",
+  "date_hint": "2026-12-13",
+  "info": "NBC · SNF",
+  "id": 207
+ },
+ {
+  "round": "REG",
+  "week": 14,
+  "away": "PIT",
+  "home": "JAX",
+  "kickoff": "2026-12-15T01:15:00+00:00",
+  "date_hint": "2026-12-14",
+  "info": "ESPN · MNF",
+  "id": 208
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "SF",
+  "home": "LAC",
+  "kickoff": "2026-12-18T01:15:00+00:00",
+  "date_hint": "2026-12-17",
+  "info": "Prime · TNF",
+  "id": 209
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "SEA",
+  "home": "PHI",
+  "kickoff": "2026-12-19T22:00:00+00:00",
+  "date_hint": "2026-12-19",
+  "info": "Fox · Samstag",
+  "id": 210
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "CHI",
+  "home": "BUF",
+  "kickoff": "2026-12-20T01:20:00+00:00",
+  "date_hint": "2026-12-19",
+  "info": "CBS · Samstag",
+  "id": 211
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "JAX",
+  "home": "HOU",
+  "kickoff": "2026-12-20T18:00:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "CBS",
+  "id": 212
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "BAL",
+  "home": "PIT",
+  "kickoff": "2026-12-20T18:00:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "CBS",
+  "id": 213
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "CLE",
+  "home": "NYG",
+  "kickoff": "2026-12-20T18:00:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "CBS",
+  "id": 214
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "IND",
+  "home": "TEN",
+  "kickoff": "2026-12-20T18:00:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "CBS",
+  "id": 215
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "MIA",
+  "home": "GB",
+  "kickoff": "2026-12-20T18:00:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "Fox",
+  "id": 216
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "NO",
+  "home": "TB",
+  "kickoff": "2026-12-20T18:00:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "Fox",
+  "id": 217
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "CIN",
+  "home": "CAR",
+  "kickoff": "2026-12-20T18:00:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "Fox",
+  "id": 218
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "ATL",
+  "home": "WAS",
+  "kickoff": "2026-12-20T18:00:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "Fox",
+  "id": 219
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "NYJ",
+  "home": "ARI",
+  "kickoff": "2026-12-20T21:05:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "Fox",
+  "id": 220
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "DAL",
+  "home": "LAR",
+  "kickoff": "2026-12-20T21:25:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "CBS",
+  "id": 221
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "DEN",
+  "home": "LV",
+  "kickoff": "2026-12-20T21:25:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "CBS",
+  "id": 222
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "DET",
+  "home": "MIN",
+  "kickoff": "2026-12-21T01:20:00+00:00",
+  "date_hint": "2026-12-20",
+  "info": "NBC · SNF",
+  "id": 223
+ },
+ {
+  "round": "REG",
+  "week": 15,
+  "away": "NE",
+  "home": "KC",
+  "kickoff": "2026-12-22T01:15:00+00:00",
+  "date_hint": "2026-12-21",
+  "info": "ESPN · MNF",
+  "id": 224
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "HOU",
+  "home": "PHI",
+  "kickoff": "2026-12-25T01:15:00+00:00",
+  "date_hint": "2026-12-24",
+  "info": "Prime · Heiligabend",
+  "id": 225
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "GB",
+  "home": "CHI",
+  "kickoff": "2026-12-25T18:00:00+00:00",
+  "date_hint": "2026-12-25",
+  "info": "Netflix · 1. Weihn.",
+  "id": 226
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "BUF",
+  "home": "DEN",
+  "kickoff": "2026-12-25T21:30:00+00:00",
+  "date_hint": "2026-12-25",
+  "info": "Netflix · 1. Weihn.",
+  "id": 227
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "LAR",
+  "home": "SEA",
+  "kickoff": "2026-12-26T01:15:00+00:00",
+  "date_hint": "2026-12-25",
+  "info": "Fox · 1. Weihn.",
+  "id": 228
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "NE",
+  "home": "NYJ",
+  "kickoff": "2026-12-27T18:00:00+00:00",
+  "date_hint": "2026-12-27",
+  "info": "CBS",
+  "id": 229
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "CLE",
+  "home": "BAL",
+  "kickoff": "2026-12-27T18:00:00+00:00",
+  "date_hint": "2026-12-27",
+  "info": "CBS",
+  "id": 230
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "LAC",
+  "home": "MIA",
+  "kickoff": "2026-12-27T18:00:00+00:00",
+  "date_hint": "2026-12-27",
+  "info": "Fox",
+  "id": 231
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "ARI",
+  "home": "NO",
+  "kickoff": "2026-12-27T18:00:00+00:00",
+  "date_hint": "2026-12-27",
+  "info": "Fox",
+  "id": 232
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "TEN",
+  "home": "LV",
+  "kickoff": "2026-12-27T21:05:00+00:00",
+  "date_hint": "2026-12-27",
+  "info": "Fox",
+  "id": 233
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "SF",
+  "home": "KC",
+  "kickoff": "2026-12-27T21:25:00+00:00",
+  "date_hint": "2026-12-27",
+  "info": "CBS",
+  "id": 234
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "JAX",
+  "home": "DAL",
+  "kickoff": "2026-12-28T01:20:00+00:00",
+  "date_hint": "2026-12-27",
+  "info": "NBC · SNF",
+  "id": 235
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "TB",
+  "home": "ATL",
+  "kickoff": null,
+  "date_hint": "2026-12-27",
+  "info": "Flex: Sa/So/Mo",
+  "id": 236
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "WAS",
+  "home": "MIN",
+  "kickoff": null,
+  "date_hint": "2026-12-27",
+  "info": "Flex: Sa/So/Mo",
+  "id": 237
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "CAR",
+  "home": "PIT",
+  "kickoff": null,
+  "date_hint": "2026-12-27",
+  "info": "Flex: Sa/So/Mo",
+  "id": 238
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "CIN",
+  "home": "IND",
+  "kickoff": null,
+  "date_hint": "2026-12-27",
+  "info": "Flex: Sa/So/Mo",
+  "id": 239
+ },
+ {
+  "round": "REG",
+  "week": 16,
+  "away": "NYG",
+  "home": "DET",
+  "kickoff": "2026-12-29T01:15:00+00:00",
+  "date_hint": "2026-12-28",
+  "info": "ESPN · MNF",
+  "id": 240
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "BAL",
+  "home": "CIN",
+  "kickoff": "2027-01-01T01:15:00+00:00",
+  "date_hint": "2026-12-31",
+  "info": "Prime · TNF",
+  "id": 241
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "BUF",
+  "home": "MIA",
+  "kickoff": "2027-01-03T18:00:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "CBS",
+  "id": 242
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "PIT",
+  "home": "TEN",
+  "kickoff": "2027-01-03T18:00:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "CBS",
+  "id": 243
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "MIN",
+  "home": "NYJ",
+  "kickoff": "2027-01-03T18:00:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "CBS",
+  "id": 244
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "NO",
+  "home": "ATL",
+  "kickoff": "2027-01-03T18:00:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "Fox",
+  "id": 245
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "SEA",
+  "home": "CAR",
+  "kickoff": "2027-01-03T18:00:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "Fox",
+  "id": 246
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "IND",
+  "home": "CLE",
+  "kickoff": "2027-01-03T18:00:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "Fox",
+  "id": 247
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "NYG",
+  "home": "DAL",
+  "kickoff": "2027-01-03T18:00:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "Fox",
+  "id": 248
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "LV",
+  "home": "ARI",
+  "kickoff": "2027-01-03T21:05:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "CBS",
+  "id": 249
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "DET",
+  "home": "CHI",
+  "kickoff": "2027-01-03T21:25:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "Fox",
+  "id": 250
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "PHI",
+  "home": "SF",
+  "kickoff": "2027-01-04T01:20:00+00:00",
+  "date_hint": "2027-01-03",
+  "info": "NBC · SNF",
+  "id": 251
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "LAR",
+  "home": "TB",
+  "kickoff": null,
+  "date_hint": "2027-01-03",
+  "info": "Flex: Sa/So/Mo",
+  "id": 252
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "DEN",
+  "home": "NE",
+  "kickoff": null,
+  "date_hint": "2027-01-03",
+  "info": "Flex: Sa/So/Mo",
+  "id": 253
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "KC",
+  "home": "LAC",
+  "kickoff": null,
+  "date_hint": "2027-01-03",
+  "info": "Flex: Sa/So/Mo",
+  "id": 254
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "WAS",
+  "home": "JAX",
+  "kickoff": null,
+  "date_hint": "2027-01-03",
+  "info": "Flex: Sa/So/Mo",
+  "id": 255
+ },
+ {
+  "round": "REG",
+  "week": 17,
+  "away": "HOU",
+  "home": "GB",
+  "kickoff": "2027-01-05T01:15:00+00:00",
+  "date_hint": "2027-01-04",
+  "info": "ESPN · MNF",
+  "id": 256
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "NYJ",
+  "home": "BUF",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 257
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "MIA",
+  "home": "NE",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 258
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "PIT",
+  "home": "BAL",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 259
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "CLE",
+  "home": "CIN",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 260
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "JAX",
+  "home": "IND",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 261
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "TEN",
+  "home": "HOU",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 262
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "LV",
+  "home": "KC",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 263
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "LAC",
+  "home": "DEN",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 264
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "PHI",
+  "home": "NYG",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 265
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "DAL",
+  "home": "WAS",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 266
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "CHI",
+  "home": "MIN",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 267
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "DET",
+  "home": "GB",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 268
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "ATL",
+  "home": "CAR",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 269
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "TB",
+  "home": "NO",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 270
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "SEA",
+  "home": "LAR",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 271
+ },
+ {
+  "round": "REG",
+  "week": 18,
+  "away": "SF",
+  "home": "ARI",
+  "kickoff": null,
+  "date_hint": "2027-01-10",
+  "info": "Termin im Januar",
+  "id": 272
+ },
+ {
+  "round": "WC",
+  "week": 19,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-16",
+  "info": "Wild Card 1",
+  "id": 273
+ },
+ {
+  "round": "WC",
+  "week": 19,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-16",
+  "info": "Wild Card 2",
+  "id": 274
+ },
+ {
+  "round": "WC",
+  "week": 19,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-16",
+  "info": "Wild Card 3",
+  "id": 275
+ },
+ {
+  "round": "WC",
+  "week": 19,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-16",
+  "info": "Wild Card 4",
+  "id": 276
+ },
+ {
+  "round": "WC",
+  "week": 19,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-16",
+  "info": "Wild Card 5",
+  "id": 277
+ },
+ {
+  "round": "WC",
+  "week": 19,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-16",
+  "info": "Wild Card 6",
+  "id": 278
+ },
+ {
+  "round": "DIV",
+  "week": 20,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-23",
+  "info": "Divisional 1",
+  "id": 279
+ },
+ {
+  "round": "DIV",
+  "week": 20,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-23",
+  "info": "Divisional 2",
+  "id": 280
+ },
+ {
+  "round": "DIV",
+  "week": 20,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-23",
+  "info": "Divisional 3",
+  "id": 281
+ },
+ {
+  "round": "DIV",
+  "week": 20,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-23",
+  "info": "Divisional 4",
+  "id": 282
+ },
+ {
+  "round": "CONF",
+  "week": 21,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-31",
+  "info": "Conference Championship 1",
+  "id": 283
+ },
+ {
+  "round": "CONF",
+  "week": 21,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-01-31",
+  "info": "Conference Championship 2",
+  "id": 284
+ },
+ {
+  "round": "SB",
+  "week": 22,
+  "away": "",
+  "home": "",
+  "kickoff": null,
+  "date_hint": "2027-02-14",
+  "info": "Super Bowl LXI",
+  "id": 285
+ }
+]
