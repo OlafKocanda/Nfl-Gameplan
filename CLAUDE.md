@@ -20,7 +20,9 @@ test/rules.test.mjs Regeltests gegen den Emulator (npm test)
 ```
 
 Bewusst klein gehalten: kein Framework, kein Build-Schritt, das Firebase-SDK
-kommt vom gstatic-CDN. Bitte so lassen. `package.json` ist nur für Emulator
+kommt vom gstatic-CDN, Schriften (Barlow Condensed, Inter) von Google Fonts,
+Team-Logos vom ESPN-CDN. Hell- und Dunkelmodus über CSS-Variablen in
+`app.css`. Bitte so lassen. `package.json` ist nur für Emulator
 und Tests da, nicht für die Seite.
 
 ## Datenmodell (Firestore)

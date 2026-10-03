@@ -72,6 +72,8 @@ const other = () => (S.me === "anni" ? "olaf" : "anni");
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
   c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const now = () => new Date();
+const logo = t => t ? `<img class="logo" alt="" loading="lazy" onerror="this.style.visibility='hidden'"
+  src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/${encodeURIComponent(t.toLowerCase())}.png&h=80&w=80">` : "";
 
 const fmtParts = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short",
   day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
@@ -261,9 +263,9 @@ function saveCache() {
   const keep = [...S.theirs].filter(([id]) => !isBackfill(S.games.get(id) || {}));
   try { localStorage.setItem(cacheKey(), JSON.stringify(Object.fromEntries(keep))); } catch {}
 }
-let revealing = null;
+let revealing = null, revealAgain = false;
 async function reveal() {
-  if (revealing) return revealing;
+  if (revealing) { revealAgain = true; return revealing; }   // läuft schon: danach nochmal
   revealing = (async () => {
     if (!S.theirs.size) {
       for (const [k, v] of Object.entries(loadCache())) {
@@ -285,6 +287,7 @@ async function reveal() {
     if (got) saveCache();
   })();
   try { await revealing; } finally { revealing = null; }
+  if (revealAgain) { revealAgain = false; await reveal(); render(); }
 }
 
 // ------------------------------------------------------------ Live (ESPN)
@@ -555,12 +558,14 @@ function fail(err) {
 function renderLogin(err = "") {
   wrap.innerHTML = `
     <header class="hero hero-login">
+      <p class="kicker">🏈 NFL 2026/27</p>
       <h1>Tippspiel</h1>
-      <p class="lede">Anni gegen Olaf, NFL 2026/27. Jede Woche den Sieger tippen.</p>
+      <p class="versus"><span class="anni">Anni</span> <span class="vs">vs.</span> <span class="olaf">Olaf</span></p>
+      <p class="lede">Jede Woche den Sieger tippen. Live-Ergebnisse, geheime Tipps bis zum Anpfiff.</p>
     </header>
     <div class="login">
       ${err ? `<p class="err">${esc(err)}</p>` : ""}
-      <button data-act="login">Mit Google anmelden</button>
+      <button class="google" data-act="login"><span class="g">G</span> Mit Google anmelden</button>
     </div>`;
 }
 
@@ -604,7 +609,7 @@ function scoreboard(sc) {
   const pos = a + o === 0 ? 50 : Math.round(a / (a + o) * 100);
   const lead = a === o ? "Gleichstand" : a > o ? `Anni führt mit ${a - o}` : `Olaf führt mit ${o - a}`;
   return `
-    <header class="hero">
+    <header class="hero board">
       <div class="duel">
         <div class="side anni${S.me === "anni" ? " isme" : ""}">
           <span class="pname">Anni</span><span class="pts">${a}</span></div>
@@ -717,12 +722,12 @@ function gameRow(g, time) {
     if (S.mine.get(gid) === side) cls.push("chosen");
     if (win === side) cls.push("winner");
     const pts = g[`${side}_score`];
-    const sc = pts != null ? ` <span class="sc">${pts}</span>` : "";
+    const sc = pts != null ? `<span class="sc">${pts}</span>` : "";
     const wp = S.showWp && S.wp.get(gid)?.home != null && S.wp.get(gid);
-    const pct = wp ? ` · <span class="wp${wp.live ? " live" : ""}">${Math.round(wp[side])} %</span>` : "";
+    const pct = wp ? `<span class="sub wp${wp.live ? " live" : ""}">${Math.round(wp[side])} %</span>` : "";
     return `<button class="${cls.join(" ")}" data-act="pick" data-game="${gid}"
-      data-choice="${side}"${live ? " disabled" : ""}><span class="team">${esc(g[side])}${sc}</span>
-      <span class="sub">${record(g[side], g)}${pct}</span></button>`;
+      data-choice="${side}"${live ? " disabled" : ""}>${logo(g[side])}<span class="tx">
+      <span class="team">${esc(g[side])}</span><span class="sub">${record(g[side], g)}</span>${pct}</span>${sc}</button>`;
   };
 
   let res = "";
@@ -809,7 +814,7 @@ function renderBackfill() {
       const c = (p === S.me ? S.mine : S.theirs).get(g.id);
       const btn = side => `<button class="bf${c === side ? " chosen" : ""}${g.winner === side ? " won" : ""}"
         data-act="backfill" data-game="${g.id}" data-player="${p}" data-choice="${side}"
-        ${S.players[p] ? "" : "disabled"}>${esc(g[side])}</button>`;
+        ${S.players[p] ? "" : "disabled"}>${logo(g[side])}${esc(g[side])}</button>`;
       return `<div class="bfline"><span class="bfname ${p}">${PLAYERS[p]}</span>${btn("away")}${btn("home")}</div>`;
     };
     const note = S.note[g.id] ? `<p class="meta rownote">${esc(S.note[g.id])}</p>` : "";
