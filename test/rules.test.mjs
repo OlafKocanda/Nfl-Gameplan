@@ -76,6 +76,7 @@ test("Anstoßzeit nur verschieben, solange offen", async () => {
   await assertSucceeds(updateDoc(doc(as("uO"), "games/1"), { kickoff: ts(2 * H) }));
   await assertFails(updateDoc(doc(as("uO"), "games/2"), { kickoff: ts(2 * H) }));
   await assertSucceeds(updateDoc(doc(as("uO"), "games/2"), { winner: "away", status: "post" }));
+  await assertSucceeds(updateDoc(doc(as("uO"), "games/2"), { pre_wp: 61.3 }));
   await assertFails(updateDoc(doc(as("uO"), "games/1"), { week: 3 }));
 });
 

@@ -8,7 +8,7 @@
   --rule:    #dfe4ec;
   --soft:    #f5f7fa;
   --anni:    #d6336c;
-  --olaf:    #0e9384;
+  --olaf:    #1098ad;
   --live:    #e8590c;
   --ok:      #2f9e44;
   --board-1: #0b1a33;
@@ -27,8 +27,8 @@
     --ink-2:   #94a2ba;
     --rule:    #253149;
     --soft:    #1a2438;
-    --anni:    #f06595;
-    --olaf:    #2fc4b2;
+    --anni:    #e64980;
+    --olaf:    #1098ad;
     --live:    #ff8a3d;
     --ok:      #51cf66;
     --board-1: #101c36;
@@ -114,7 +114,7 @@ button:focus-visible { outline: 2px solid var(--olaf); outline-offset: 2px; }
   border-radius: 18px; color: #fff;
   background:
     radial-gradient(120% 140% at 0% 0%, rgba(214, 51, 108, .28), transparent 55%),
-    radial-gradient(120% 140% at 100% 0%, rgba(14, 147, 132, .30), transparent 55%),
+    radial-gradient(120% 140% at 100% 0%, rgba(16, 152, 173, .32), transparent 55%),
     linear-gradient(160deg, var(--board-1), var(--board-2));
   box-shadow: 0 8px 24px rgba(11, 26, 51, .22);
 }
@@ -130,7 +130,7 @@ button:focus-visible { outline: 2px solid var(--olaf); outline-offset: 2px; }
   order: -1; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
 }
 .side.anni .pname { color: #ff8fb4; }
-.side.olaf .pname { color: #63e6d4; }
+.side.olaf .pname { color: #66d9e8; }
 .side.isme .pname::after { content: " · du"; color: rgba(255, 255, 255, .6); font-weight: 600; }
 .pts {
   font-family: var(--display); font-size: 64px; font-weight: 700;
@@ -139,7 +139,7 @@ button:focus-visible { outline: 2px solid var(--olaf); outline-offset: 2px; }
 
 .bar {
   position: relative; height: 8px; margin: 14px 0 10px;
-  border-radius: 99px; background: #20c9b4;
+  border-radius: 99px; background: #15aabf;
 }
 .fill {
   position: absolute; inset: 0 auto 0 0; border-radius: 99px;
@@ -410,3 +410,78 @@ button.whobtn { flex: 1; padding: 0; background: none; border: 0; min-height: 0;
 .step h3 { margin: 3px 0 3px; font-size: 16px; letter-spacing: -.01em; }
 .step p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
 .go { width: 100%; }
+
+/* ------------------------------------------------------------- Banner */
+.banner {
+  display: block; margin: 12px 0 0; padding: 11px 14px;
+  border-radius: 14px; font-size: 14px; font-weight: 500; text-decoration: none;
+  color: var(--ink); background: var(--card); border: 1px solid var(--rule); box-shadow: var(--shadow);
+}
+.banner.remind {
+  margin-top: 14px; color: #7a3300; background: #fff4e6; border-color: #ffd8a8; font-weight: 600;
+}
+@media (prefers-color-scheme: dark) {
+  .banner.remind { color: #ffc078; background: #2b1d0e; border-color: #5c3a14; }
+}
+.banner.paper { color: var(--ink-2); }
+.banner.win { font-size: 15px; }
+.banner.win.anni { border-color: var(--anni); box-shadow: inset 4px 0 0 var(--anni), var(--shadow); }
+.banner.win.olaf { border-color: var(--olaf); box-shadow: inset 4px 0 0 var(--olaf), var(--shadow); }
+.banner.win.anni strong { color: var(--anni); }
+.banner.win.olaf strong { color: var(--olaf); }
+.banner .anni { color: var(--anni); font-weight: 700; }
+.banner .olaf { color: var(--olaf); font-weight: 700; }
+.muted { color: var(--ink-2); }
+.tools { gap: 8px; }
+
+/* ---------------------------------------------------- Tabelle: ESPN, Pokal */
+.tbl th.espn, .tbl td.espn { color: var(--ink-2); }
+.tbl thead th.espn { color: var(--ink-2); }
+.tbl .cup { font-size: 15px; margin-right: 4px; vertical-align: 2px; }
+.tbl tr.open th { color: var(--ink-2); }
+
+/* ----------------------------------------------------------------- Statistik */
+.chart { position: relative; margin-top: 12px; padding: 12px 10px 6px;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow); }
+.chart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.legend { display: flex; gap: 14px; margin: 0 0 6px 6px; font-size: 12.5px; color: var(--ink-2); }
+.lg i { display: inline-block; width: 14px; height: 3px; margin-right: 6px; border-radius: 2px; vertical-align: 3px; }
+.lg.anni i { background: var(--anni); }
+.lg.olaf i { background: var(--olaf); }
+.lg.espn i { background: repeating-linear-gradient(90deg, var(--ink-2) 0 4px, transparent 4px 7px); }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.chart .ax { fill: var(--ink-2); font-size: 11px; }
+.chart .ln { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .ln.anni { stroke: var(--anni); }
+.chart .ln.olaf { stroke: var(--olaf); }
+.chart .ln.espn { stroke: var(--ink-2); stroke-dasharray: 4 3; }
+.chart .dot { stroke: var(--card); stroke-width: 2; }
+.chart .dot.anni { fill: var(--anni); }
+.chart .dot.olaf { fill: var(--olaf); }
+.chart .dot.espn { fill: var(--ink-2); }
+.chart .tag { font-size: 12px; font-weight: 600; fill: var(--ink); }
+.chart .cross { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 2 3; }
+.chart .hit { fill: transparent; cursor: crosshair; }
+.tip {
+  position: absolute; top: 34px; z-index: 2; pointer-events: none; min-width: 130px;
+  padding: 8px 10px; border-radius: 10px; font-size: 12.5px;
+  background: var(--card); border: 1px solid var(--rule); box-shadow: 0 6px 18px rgba(0,0,0,.14);
+}
+.tip b { display: block; margin-bottom: 4px; }
+.tip .tr { display: flex; align-items: center; gap: 6px; }
+.tip .tr i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-2); }
+.tip .tr i.anni { background: var(--anni); }
+.tip .tr i.olaf { background: var(--olaf); }
+.tip em { margin-left: auto; font-style: normal; font-weight: 700; }
+.tip small { color: var(--ink-2); width: 2.2em; text-align: right; }
+
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.tile { display: flex; flex-direction: column; padding: 12px 14px;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow); }
+.tl { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.tv { font-family: var(--display); font-size: 40px; font-weight: 700; line-height: 1.05; }
+.ts { font-size: 12.5px; color: var(--ink-2); }
+.tbl.duo th small { display: block; font-size: 12px; color: var(--ink-2); font-weight: 400; }
+.tbl.teams td { font-family: var(--display); font-size: 20px; white-space: nowrap; }
+.tbl.teams td .logo { width: 20px; height: 20px; margin-right: 5px; vertical-align: -3px; object-fit: contain; }
+.tbl.teams td small { margin-left: 4px; font-family: Inter, ui-sans-serif, sans-serif; font-size: 11.5px; font-weight: 500; color: var(--ink-2); }

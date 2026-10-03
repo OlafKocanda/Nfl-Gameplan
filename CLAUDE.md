@@ -31,7 +31,8 @@ und Tests da, nicht für die Seite.
   Olaf einträgt, ist es
 - `games/{id}` — round, week, away, home, kickoff (Timestamp oder null),
   date_hint, info, winner, espn_id, away_score, home_score,
-  status (`pre`/`in`/`post`), detail (z. B. „Q3 · 5:21“)
+  status (`pre`/`in`/`post`), detail (z. B. „Q3 · 5:21“), pre_wp (Siegchance
+  Heimteam in % zum Anpfiff laut ESPN, nach Spielende einmal gespeichert)
 - `picks/{id}_{spieler}` — game (String), player, uid, choice, at
 - `tipped/{id}_{spieler}` — game, player; nur DASS getippt wurde
 
@@ -75,6 +76,15 @@ das Spiel offen ist und ESPN `timeValid` meldet.
 der Regular Season in `games`. Die Siegchance (`loadWp()`) kommt aus dem
 ESPN-Summary-Endpunkt (`predictor` vor dem Spiel, `winprobability` live),
 wird nur angezeigt, nicht gespeichert, und nur geholt, wenn der Knopf an ist.
+
+`storePreWp()` holt nach Spielende einmal die ESPN-Prognose vom Anpfiff
+(`winprobability[0]`) und speichert sie als `pre_wp`. Darauf bauen „ESPN als
+Mitspieler“ (`espnPick()`, `espnStats()`) und die Statistik-Seite (`#statistik`,
+Diagramm als Inline-SVG in `drawChart()`).
+
+Farben Anni/Olaf sind mit dem dataviz-Validator auf Farbschwäche geprüft
+(hell `#d6336c`/`#1098ad`, dunkel `#e64980`/`#1098ad`). Nicht ohne erneute
+Prüfung ändern.
 
 ## Spielplan-Daten
 

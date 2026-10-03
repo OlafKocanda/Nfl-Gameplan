@@ -4,7 +4,7 @@ rules_version = '2';
 //
 // meta/players   {anni: uid, olaf: uid} - wer sich zuerst als Anni bzw.
 //                Olaf einträgt, ist es. Danach ist der Platz fest.
-// games/{id}     Spielplan plus Stand, Ergebnis, Anstoßzeit
+// games/{id}     Spielplan plus Stand, Ergebnis, Anstoßzeit, ESPN-Prognose (pre_wp)
 // picks/{id}     der eigentliche Tipp, id = "<spiel>_<spieler>"
 // tipped/{id}    nur DASS getippt wurde, für die Anzeige beim anderen
 //
@@ -68,10 +68,11 @@ service cloud.firestore {
       allow create: if isAnyPlayer()
         && request.resource.data.keys().hasOnly(['round', 'week', 'away', 'home',
              'kickoff', 'date_hint', 'info', 'winner', 'espn_id', 'away_score',
-             'home_score', 'status', 'detail']);
+             'home_score', 'status', 'detail', 'pre_wp']);
       allow update: if isAnyPlayer()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['away', 'home',
-             'kickoff', 'winner', 'espn_id', 'away_score', 'home_score', 'status', 'detail'])
+             'kickoff', 'winner', 'espn_id', 'away_score', 'home_score', 'status', 'detail',
+             'pre_wp'])
         // Die Anstoßzeit lässt sich nur verschieben, solange das Spiel offen ist.
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['kickoff'])
             || isOpen(resource.data));

@@ -245,7 +245,7 @@ async function seed() {
         round: r.round, week: r.week, away: r.away, home: r.home,
         kickoff: r.kickoff ? Timestamp.fromDate(new Date(r.kickoff)) : null,
         date_hint: r.date_hint || null, info: r.info || "", winner: null,
-        espn_id: null, away_score: null, home_score: null, status: null, detail: null,
+        espn_id: null, away_score: null, home_score: null, status: null, detail: null, pre_wp: null,
       });
     }
     await b.commit();
@@ -348,6 +348,29 @@ async function syncWeek(w) {
     if (Object.keys(patch).length) writes.push(updateDoc(doc(db, "games", String(g.id)), patch));
   }
   await Promise.all(writes);
+  await storePreWp(w);
+}
+
+// ESPN-Prognose vom Anpfiff einmal pro beendetem Spiel holen und speichern,
+// für "ESPN als Mitspieler" und die Statistik.
+async function fetchPreWp(espnId) {
+  const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${espnId}`);
+  if (!r.ok) return null;
+  const d = await r.json();
+  const wp = d.winprobability || [];
+  if (wp.length) return Math.round(wp[0].homeWinPercentage * 1000) / 10;
+  const h = parseFloat(d.predictor?.homeTeam?.gameProjection), a = parseFloat(d.predictor?.awayTeam?.gameProjection);
+  return !isNaN(h) && !isNaN(a) && h + a > 0 ? Math.round(h / (h + a) * 1000) / 10 : null;
+}
+async function storePreWp(w) {
+  const todo = [...S.games.values()]
+    .filter(g => g.week === w && g.status === "post" && g.espn_id && g.pre_wp == null).slice(0, 16);
+  await Promise.all(todo.map(async g => {
+    try {
+      const v = await fetchPreWp(g.espn_id);
+      if (v != null) await updateDoc(doc(db, "games", String(g.id)), { pre_wp: v });
+    } catch { /* nächster Abgleich */ }
+  }));
 }
 
 function weeksToSync() {
@@ -356,6 +379,7 @@ function weeksToSync() {
   for (const g of S.games.values()) {
     const when = g.kickoff || (g.date_hint ? new Date(`${g.date_hint}T12:00:00Z`) : null);
     if (!g.winner && when && when <= soon) weeks.add(g.week);
+    if (g.status === "post" && g.pre_wp == null && g.espn_id) weeks.add(g.week);
   }
   return [...weeks].sort((a, b) => a - b);
 }
@@ -387,6 +411,90 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && S.me) loopSync();
 });
 
+// ------------------------------------------------------------ Wochensieger
+function weekResult(w, sc = scores()) {
+  const gs = [...S.games.values()].filter(g => g.week === w);
+  const graded = gs.filter(g => g.winner).length;
+  return { a: sc.perWeek.anni[w] || 0, o: sc.perWeek.olaf[w] || 0, graded,
+           total: gs.length, done: gs.length > 0 && graded === gs.length };
+}
+function weekBanner(w, sc) {
+  const r = weekResult(w, sc);
+  if (!r.graded) return "";
+  const name = w <= 18 ? `Woche ${w}` : (WEEKS.find(([x]) => x === w) || [, ""])[1];
+  if (r.done) {
+    if (r.a === r.o) return `<div class="banner tie">🤝 ${name} endet unentschieden, ${r.a}:${r.o}</div>`;
+    const who = r.a > r.o ? "anni" : "olaf";
+    return `<div class="banner win ${who}">🏆 <strong>${PLAYERS[who]}</strong> gewinnt ${name}
+      mit ${Math.max(r.a, r.o)}:${Math.min(r.a, r.o)}</div>`;
+  }
+  return `<div class="banner live">Zwischenstand ${name}: <span class="anni">Anni ${r.a}</span> ·
+    <span class="olaf">Olaf ${r.o}</span> <span class="muted">(${r.graded} von ${r.total} gewertet)</span></div>`;
+}
+
+// ESPN als dritter Mitspieler: tippt immer den Favoriten laut Prognose vom Anpfiff.
+const espnPick = g => (g.pre_wp == null || g.pre_wp === 50) ? null : g.pre_wp > 50 ? "home" : "away";
+function espnStats() {
+  let ok = 0, n = 0;
+  const perWeek = {};
+  for (const g of S.games.values()) {
+    const p = g.winner && espnPick(g);
+    if (!p) continue;
+    n++;
+    perWeek[g.week] ??= 0;
+    if (p === g.winner) { ok++; perWeek[g.week]++; }
+  }
+  return { hit: [ok, n], perWeek };
+}
+
+// ------------------------------------------------------------- Erinnerung
+// Offene Spiele in den nächsten 36 Stunden ohne eigenen Tipp.
+function reminder() {
+  const soon = Date.now() + 36 * 3600e3;
+  const due = [...S.games.values()].filter(g => g.away && g.home && g.kickoff && !started(g)
+    && g.kickoff.getTime() <= soon && !S.mine.has(g.id)).sort((a, b) => a.kickoff - b.kickoff);
+  if (!due.length) return "";
+  const b = berlin(due[0].kickoff);
+  const n = due.length === 1 ? "1 Spiel wartet" : `${due.length} Spiele warten`;
+  return `<a class="banner remind" href="#woche=${due[0].week}">⏰ ${n} noch auf deinen Tipp,
+    das erste beginnt ${b.wd} ${b.day} um ${b.time} Uhr</a>`;
+}
+
+// Kalenderdatei: pro Woche eine Erinnerung 2 Stunden vor dem ersten Spiel und,
+// wenn das deutlich früher ist, eine weitere vor den Sonntagsspielen.
+function icsFile() {
+  const fmt = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const url = location.origin + location.pathname;
+  const events = [];
+  for (const [w, label] of WEEKS) {
+    const gs = [...S.games.values()].filter(g => g.week === w && g.kickoff && g.kickoff > now())
+      .sort((a, b) => a.kickoff - b.kickoff);
+    if (!gs.length) continue;
+    const times = [gs[0].kickoff];
+    const sunday = gs.find(g => berlin(g.kickoff).wd === "So");
+    if (sunday && sunday.kickoff - gs[0].kickoff > 24 * 3600e3) times.push(sunday.kickoff);
+    for (const k of times) {
+      const start = new Date(k.getTime() - 2 * 3600e3);
+      events.push(["BEGIN:VEVENT", `UID:tippspiel-${w}-${k.getTime()}@nfl-gameplan`,
+        `DTSTAMP:${fmt(now())}`, `DTSTART:${fmt(start)}`, `DTEND:${fmt(new Date(start.getTime() + 15 * 60e3))}`,
+        `SUMMARY:🏈 Tippspiel: ${label} tippen`, `DESCRIPTION:Erstes Spiel um ${berlin(k).time} Uhr. ${url}`,
+        `URL:${url}`, "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Tippspiel", "TRIGGER:PT0M",
+        "END:VALARM", "END:VEVENT"].join("\r\n"));
+    }
+  }
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Tippspiel Anni vs. Olaf//DE",
+    "CALSCALE:GREGORIAN", "X-WR-CALNAME:NFL-Tippspiel", ...events, "END:VCALENDAR"].join("\r\n");
+}
+function downloadIcs() {
+  const blob = new Blob([icsFile()], { type: "text/calendar;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "tippspiel-erinnerungen.ics";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
 // ------------------------------------------------------ Bilanz & Siegchance
 // Bilanz eines Teams vor diesem Spiel, aus den eingetragenen Ergebnissen der
 // Regular Season. Für kommende Spiele ist das der aktuelle Stand.
@@ -409,6 +517,10 @@ async function loadWp(g) {
   const old = S.wp.get(g.id);
   const age = old ? Date.now() - old.at : Infinity;
   if (old && (old.final || age < (g.status === "in" ? 55e3 : 30 * 60e3))) return false;
+  if (g.status === "post" && g.pre_wp != null) {
+    S.wp.set(g.id, { home: g.pre_wp, away: 100 - g.pre_wp, live: false, at: Date.now(), final: true });
+    return true;
+  }
   S.wp.set(g.id, { ...(old || { home: null }), at: Date.now() });   // nicht bei jedem Rendern neu fragen
   const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${g.espn_id}`);
   if (!r.ok) return false;
@@ -515,6 +627,7 @@ document.addEventListener("click", e => {
   else if (act === "winner") patchGame(gid, { winner: b.dataset.choice });
   else if (act === "backfill") backfill(gid, b.dataset.player, b.dataset.choice);
   else if (act === "sync") syncAll();
+  else if (act === "ics") downloadIcs();
   else if (act === "intro-done") {
     try { localStorage.setItem("tippspiel:intro", "1"); } catch {}
     if (location.hash === "#hilfe") location.hash = ""; else render();
@@ -598,10 +711,15 @@ function nav(week) {
         <label class="sr" for="w">Spielwoche</label>
         <select id="w">${opts}</select>
       </form>
-      ${backfillOpen() ? `<a href="#nachtragen" class="navlink">Papiertipps</a>` : ""}
       <a href="#tabelle" class="navlink">Tabelle</a>
-      <a href="#" class="navlink quiet" data-act="logout">Abmelden</a>
+      <a href="#statistik" class="navlink">Statistik</a>
     </nav>`;
+}
+
+function footer() {
+  return `<p class="meta helplink"><a href="#hilfe">So funktioniert's</a>
+    ${backfillOpen() ? ` · <a href="#nachtragen">Papiertipps</a>` : ""}
+    · <a href="#" data-act="logout">Abmelden (${PLAYERS[S.me]})</a></p>`;
 }
 
 function scoreboard(sc) {
@@ -637,6 +755,7 @@ function render() {
     if (h === "#hilfe" || !seen) renderIntro();
     else if (h === "#tabelle") renderTable();
     else if (h === "#nachtragen" && backfillOpen()) renderBackfill();
+    else if (h === "#statistik") renderStats();
     else renderWeek(+(h.match(/woche=(\d+)/) || [])[1] || currentWeek());
   });
 }
@@ -667,18 +786,24 @@ function renderWeek(n) {
     : open ? `${open} Spiele warten noch auf deinen Tipp`
     : tipped ? `${tipped} von ${playable.length} getippt` : "";
   document.title = `${title} - Tippspiel`;
-  wrap.innerHTML = nav(n) + scoreboard(sc) + `
+  const paper = backfillOpen() && [...S.games.values()].some(g => isBackfill(g)
+    && (!S.mine.has(g.id) || !S.theirs.has(g.id)));
+  wrap.innerHTML = nav(n) + reminder() + scoreboard(sc) + `
+    ${paper ? `<a class="banner paper" href="#nachtragen">📝 Papiertipps der ersten Wochen nachtragen
+      (bis 17.10.)</a>` : ""}
     <section class="week">
       <h2>${title}<span class="wsub">${stand || (n <= 18 ? label : "")}
         ${done ? `&nbsp;·&nbsp; ${done} gewertet` : ""}</span></h2>
+      ${weekBanner(n, sc)}
       <div class="tools">
+        <button class="toggle" data-act="ics">⏰ Kalender-Erinnerung</button>
         <button class="toggle${S.showWp ? " on" : ""}" data-act="wp" aria-pressed="${S.showWp}">
           Siegchance ${S.showWp ? "an" : "aus"}</button>
       </div>
       <ul class="games">${rows.join("")}</ul>
       ${S.showWp ? `<p class="meta wpnote">Siegchance laut ESPN: vor dem Spiel die Prognose,
         während des Spiels live.</p>` : ""}
-      <p class="meta helplink"><a href="#hilfe">So funktioniert's</a></p>
+      ${footer()}
     </section>`;
   ensureWp(n);
 }
@@ -760,11 +885,14 @@ function renderTable() {
   const pct = ([ok, n]) => (n ? `${Math.round(ok / n * 100)} %` : "–");
   const counted = {};
   for (const g of S.games.values()) if (g.winner) counted[g.week] = (counted[g.week] || 0) + 1;
+  const es = espnStats();
   const body = WEEKS.filter(([w]) => counted[w]).map(([w, l]) => {
-    const a = sc.perWeek.anni[w] || 0, o = sc.perWeek.olaf[w] || 0;
-    const cls = a > o ? "a" : o > a ? "o" : "t";
-    return `<tr class="${cls}"><th>${l}</th><td>${a}</td><td>${o}</td>
-      <td class="of">von ${counted[w]}</td></tr>`;
+    const r = weekResult(w, sc);
+    const cls = r.a > r.o ? "a" : r.o > r.a ? "o" : "t";
+    const cup = who => r.done && ((who === "a" && r.a > r.o) || (who === "o" && r.o > r.a))
+      ? `<span class="cup" title="Wochensieg">🏆</span>` : "";
+    return `<tr class="${cls}${r.done ? "" : " open"}"><th>${l}</th><td>${cup("a")}${r.a}</td><td>${cup("o")}${r.o}</td>
+      <td class="espn">${es.perWeek[w] ?? "–"}</td><td class="of">von ${counted[w]}${r.done ? "" : " …"}</td></tr>`;
   });
   const t = S.sync.at ? berlin(S.sync.at).time : null;
   const quelle = t ? `Ergebnisse von ESPN, zuletzt abgeglichen um ${t} Uhr`
@@ -775,28 +903,31 @@ function renderTable() {
     <section class="week">
       <h2>Auswertung</h2>
       <table class="tbl stats">
-        <thead><tr><th></th><th>Anni</th><th>Olaf</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Anni</th><th>Olaf</th><th class="espn">ESPN</th></tr></thead>
         <tbody>
-          <tr><th>Trefferquote</th><td>${pct(sc.hit.anni)}</td><td>${pct(sc.hit.olaf)}</td><td class="of"></td></tr>
+          <tr><th>Trefferquote</th><td>${pct(sc.hit.anni)}</td><td>${pct(sc.hit.olaf)}</td>
+            <td class="espn">${pct(es.hit)}</td></tr>
           <tr><th>Richtig getippt</th><td>${sc.hit.anni[0]}</td><td>${sc.hit.olaf[0]}</td>
-            <td class="of">von ${sc.hit.anni[1]} / ${sc.hit.olaf[1]}</td></tr>
+            <td class="espn">${es.hit[0]}</td></tr>
           <tr><th>Wochensiege</th><td>${sc.wins.anni}</td><td>${sc.wins.olaf}</td>
             <td class="of">${sc.wins.tie}× gleich</td></tr>
         </tbody>
       </table>
+      <p class="meta bfintro">ESPN tippt immer den Favoriten laut eigener Prognose zum Anpfiff.</p>
     </section>
     <section class="week">
       <h2>Bilanz<span class="wsub">Regular Season ${sc.reg.anni}:${sc.reg.olaf}
         &nbsp;·&nbsp; Playoffs ${sc.po.anni}:${sc.po.olaf}</span></h2>
       <table class="tbl">
-        <thead><tr><th></th><th>Anni</th><th>Olaf</th><th></th></tr></thead>
-        <tbody>${body.join("") || `<tr><td colspan="4" class="none">Noch kein Spiel gewertet.
+        <thead><tr><th></th><th>Anni</th><th>Olaf</th><th class="espn">ESPN</th><th></th></tr></thead>
+        <tbody>${body.join("") || `<tr><td colspan="5" class="none">Noch kein Spiel gewertet.
           Sobald das erste Ergebnis da ist, steht hier die Bilanz.</td></tr>`}</tbody>
       </table>
       <div class="sync">
         <p class="meta">${quelle}</p>
         <button data-act="sync">Jetzt aktualisieren</button>
       </div>
+      ${footer()}
     </section>`;
 }
 
@@ -872,4 +1003,143 @@ function renderIntro() {
     </ol>
     <button class="go" data-act="intro-done">Los geht's</button>
     <p class="meta helplink">Diese Anleitung findest du später unten auf jeder Spielwoche unter „So funktioniert's“.</p>`;
+}
+
+// ---------------------------------------------------------------- Statistik
+function renderStats() {
+  const sc = scores();
+  const es = espnStats();
+  const choiceOf = (p, id) => (p === S.me ? S.mine : S.theirs).get(id);
+  const finished = [...S.games.values()].filter(g => g.winner).sort((a, b) => a.kickoff - b.kickoff || a.id - b.id);
+
+  // Punkteverlauf: kumuliert über die Wochen mit Ergebnissen
+  const weeks = WEEKS.map(([w]) => w).filter(w => finished.some(g => g.week === w));
+  const series = [
+    { key: "anni", name: "Anni", cls: "anni", per: sc.perWeek.anni },
+    { key: "olaf", name: "Olaf", cls: "olaf", per: sc.perWeek.olaf },
+    { key: "espn", name: "ESPN", cls: "espn", per: es.perWeek },
+  ].map(s => { let sum = 0; return { ...s, pts: weeks.map(w => (sum += s.per[w] || 0)) }; });
+
+  // Kennzahlen je Spieler
+  const per = p => {
+    const mine = finished.filter(g => choiceOf(p, g.id));
+    const fav = mine.filter(g => espnPick(g));
+    const favPicked = fav.filter(g => choiceOf(p, g.id) === espnPick(g));
+    const upset = fav.filter(g => choiceOf(p, g.id) !== espnPick(g) && choiceOf(p, g.id) === g.winner);
+    const home = mine.filter(g => choiceOf(p, g.id) === "home");
+    const teams = {};
+    for (const g of mine) {
+      const t = g[choiceOf(p, g.id)];
+      teams[t] ??= { t, n: 0, ok: 0 };
+      teams[t].n++;
+      if (choiceOf(p, g.id) === g.winner) teams[t].ok++;
+    }
+    const list = Object.values(teams);
+    const often = [...list].sort((a, b) => b.n - a.n || b.ok - a.ok)[0];
+    const rated = list.filter(x => x.n >= 3);
+    const best = [...rated].sort((a, b) => b.ok / b.n - a.ok / a.n || b.n - a.n)[0];
+    const worst = [...rated].sort((a, b) => a.ok / a.n - b.ok / b.n || b.n - a.n)[0];
+    return { n: mine.length, fav: [favPicked.length, fav.length], upset: upset.length,
+             home: [home.length, mine.length], often, best, worst };
+  };
+  const A = per("anni"), O = per("olaf");
+  const both = finished.filter(g => choiceOf("anni", g.id) && choiceOf("olaf", g.id));
+  const same = both.filter(g => choiceOf("anni", g.id) === choiceOf("olaf", g.id)).length;
+  const pc = (a, b) => (b ? `${Math.round(a / b * 100)} %` : "–");
+  const team = x => x ? `${logo(x.t)}<span>${esc(x.t)}</span><small>${x.ok}/${x.n}</small>` : `<span class="muted">–</span>`;
+
+  document.title = "Statistik - Tippspiel";
+  wrap.innerHTML = nav(currentWeek()) + `
+    <section class="week">
+      <h2>Punkteverlauf<span class="wsub">richtige Tipps, aufsummiert</span></h2>
+      ${weeks.length ? `<div class="chart" id="chart"></div>` : `<p class="meta bfintro">Sobald Ergebnisse da sind, erscheint hier der Verlauf.</p>`}
+    </section>
+    <section class="week">
+      <h2>Kennzahlen</h2>
+      <div class="tiles">
+        <div class="tile"><span class="tl">Gleich getippt</span><span class="tv">${pc(same, both.length)}</span>
+          <span class="ts">${same} von ${both.length} Spielen</span></div>
+        <div class="tile"><span class="tl">ESPN-Treffer</span><span class="tv">${pc(...es.hit)}</span>
+          <span class="ts">Favorit gewinnt</span></div>
+      </div>
+      <table class="tbl duo">
+        <thead><tr><th></th><th>Anni</th><th>Olaf</th></tr></thead>
+        <tbody>
+          <tr><th>Favorit getippt<small>wie oft auf ESPNs Favoriten</small></th><td>${pc(...A.fav)}</td><td>${pc(...O.fav)}</td></tr>
+          <tr><th>Überraschungen<small>Außenseiter getippt und richtig</small></th><td>${A.upset}</td><td>${O.upset}</td></tr>
+          <tr><th>Heimteam getippt</th><td>${pc(...A.home)}</td><td>${pc(...O.home)}</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="week">
+      <h2>Teams<span class="wsub">ab 3 Tipps auf ein Team</span></h2>
+      <table class="tbl duo teams">
+        <thead><tr><th></th><th>Anni</th><th>Olaf</th></tr></thead>
+        <tbody>
+          <tr><th>Am häufigsten getippt</th><td>${team(A.often)}</td><td>${team(O.often)}</td></tr>
+          <tr><th>Bester Riecher</th><td>${team(A.best)}</td><td>${team(O.best)}</td></tr>
+          <tr><th>Größter Reinfall</th><td>${team(A.worst)}</td><td>${team(O.worst)}</td></tr>
+        </tbody>
+      </table>
+      ${footer()}
+    </section>`;
+  if (weeks.length) drawChart(document.getElementById("chart"), weeks, series);
+}
+
+function drawChart(el, weeks, series) {
+  const W = Math.max(280, el.clientWidth), H = 230;
+  const m = { t: 14, r: 64, b: 28, l: 30 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const max = Math.max(4, ...series.flatMap(s => s.pts));
+  const step = max <= 10 ? 2 : max <= 40 ? 10 : max <= 100 ? 20 : 50;
+  const top = Math.ceil(max / step) * step;
+  const x = i => m.l + (weeks.length === 1 ? iw / 2 : i * iw / (weeks.length - 1));
+  const y = v => m.t + ih - v / top * ih;
+  const label = w => (w <= 18 ? String(w) : (WEEKS.find(([k]) => k === w) || [, ""])[1].slice(0, 2));
+
+  let grid = "";
+  for (let v = 0; v <= top; v += step) {
+    grid += `<line class="grid" x1="${m.l}" x2="${m.l + iw}" y1="${y(v)}" y2="${y(v)}"/>
+      <text class="ax" x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  }
+  const every = Math.ceil(weeks.length / 9);
+  const xl = weeks.map((w, i) => i % every && i !== weeks.length - 1 ? "" :
+    `<text class="ax" x="${x(i)}" y="${H - 8}" text-anchor="middle">${label(w)}</text>`).join("");
+
+  // Endbeschriftungen ohne Überlappung
+  const ends = series.map(s => ({ s, y: y(s.pts[s.pts.length - 1]) })).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
+
+  const lines = series.map(s => `
+    <path class="ln ${s.cls}" d="${s.pts.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`).join("")}"/>
+    ${s.pts.map((v, i) => `<circle class="dot ${s.cls}" cx="${x(i)}" cy="${y(v)}" r="4"/>`).join("")}`).join("");
+  const tags = ends.map(e => `<text class="tag ${e.s.cls}" x="${m.l + iw + 10}" y="${e.y + 4}">${e.s.name} ${e.s.pts[e.s.pts.length - 1]}</text>`).join("");
+
+  el.innerHTML = `
+    <div class="legend">${series.map(s => `<span class="lg ${s.cls}"><i></i>${s.name}</span>`).join("")}</div>
+    <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="Punkteverlauf: ${series.map(s => `${s.name} ${s.pts[s.pts.length - 1]}`).join(", ")}">
+      ${grid}${xl}<line class="cross" y1="${m.t}" y2="${m.t + ih}" x1="-10" x2="-10"/>${lines}${tags}
+      <rect class="hit" x="${m.l - 10}" y="0" width="${iw + 20}" height="${H}"/>
+    </svg>
+    <div class="tip" hidden></div>`;
+
+  const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), cross = el.querySelector(".cross");
+  const show = ev => {
+    const r = svg.getBoundingClientRect();
+    const px = ev.clientX - r.left;
+    const i = weeks.length === 1 ? 0 : Math.max(0, Math.min(weeks.length - 1, Math.round((px - m.l) / iw * (weeks.length - 1))));
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
+    const w = weeks[i];
+    tip.innerHTML = `<b>${w <= 18 ? `Woche ${w}` : (WEEKS.find(([k]) => k === w) || [, ""])[1]}</b>` +
+      [...series].sort((a, b) => b.pts[i] - a.pts[i]).map(s =>
+        `<span class="tr"><i class="${s.cls}"></i>${s.name}<em>${s.pts[i]}</em><small>+${s.per[w] || 0}</small></span>`).join("");
+    tip.hidden = false;
+    const left = Math.min(Math.max(x(i) - tip.offsetWidth / 2, 0), W - tip.offsetWidth);
+    tip.style.left = `${left}px`;
+  };
+  const hide = () => { tip.hidden = true; cross.setAttribute("x1", -10); cross.setAttribute("x2", -10); };
+  svg.addEventListener("pointermove", show);
+  svg.addEventListener("pointerdown", show);
+  svg.addEventListener("pointerleave", hide);
 }
