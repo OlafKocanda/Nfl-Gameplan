@@ -69,6 +69,11 @@ nur, was sich geändert hat. ESPN-Kürzel, die von unseren abweichen, stehen
 in `ESPN_TEAM` (`WSH` → `WAS`). Anstoßzeiten werden nur übernommen, solange
 das Spiel offen ist und ESPN `timeValid` meldet.
 
+`record()` rechnet die Bilanz eines Teams vor einem Spiel aus den Ergebnissen
+der Regular Season in `games`. Die Siegchance (`loadWp()`) kommt aus dem
+ESPN-Summary-Endpunkt (`predictor` vor dem Spiel, `winprobability` live),
+wird nur angezeigt, nicht gespeichert, und nur geholt, wenn der Knopf an ist.
+
 ## Spielplan-Daten
 
 `schedule.json` ist die Quelle der Wahrheit und wurde gegen nfl.com

@@ -18,6 +18,9 @@ die Ergebnisse kommen live von ESPN. Kostenlos, kein eigener Server.
   aktualisiert sich die Seite jede Minute
 - Anstoßzeiten (auch verlegte und die erst spät festgelegten in Woche
   16–18) und Playoff-Paarungen kommen ebenfalls von ESPN
+- Unter jedem Team steht seine **Bilanz** (z. B. 3:0) vor diesem Spiel
+- Optional per Knopf **Siegchance**: vor dem Spiel die ESPN-Prognose,
+  während des Spiels live. Die Einstellung merkt sich jedes Gerät
 - **Auswertung** in der Tabelle: Trefferquote, Wochensiege, Bilanz je Woche
 - Fällt ESPN aus, kann man Sieger, Zeit und Paarung per Hand eintragen
 - **Papiertipps:** Die Tipps für die Spiele vor dem Start der App (Wochen

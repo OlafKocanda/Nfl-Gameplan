@@ -62,6 +62,8 @@ const S = {
   theirs: new Map(),  // id -> Tipp des anderen, erst nach Anpfiff
   sync: { at: null, ok: null },
   note: {},           // id -> Hinweis an einer Spielzeile
+  wp: new Map(),      // id -> {home, away, live, at}  Siegchance von ESPN
+  showWp: (() => { try { return localStorage.getItem("tippspiel:wp") === "1"; } catch { return false; } })(),
 };
 const unsub = [];
 const other = () => (S.me === "anni" ? "olaf" : "anni");
@@ -382,6 +384,56 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && S.me) loopSync();
 });
 
+// ------------------------------------------------------ Bilanz & Siegchance
+// Bilanz eines Teams vor diesem Spiel, aus den eingetragenen Ergebnissen der
+// Regular Season. Für kommende Spiele ist das der aktuelle Stand.
+function record(team, g) {
+  const until = g.kickoff || (g.date_hint ? new Date(`${g.date_hint}T23:59:59Z`) : null);
+  let w = 0, l = 0, t = 0;
+  for (const x of S.games.values()) {
+    if (x.round !== "REG" || !x.winner || x.id === g.id) continue;
+    if (x.away !== team && x.home !== team) continue;
+    if (until && x.kickoff && x.kickoff >= until) continue;
+    if (x.winner === "tie") t++;
+    else if (x[x.winner] === team) w++;
+    else l++;
+  }
+  return t ? `${w}:${l}:${t}` : `${w}:${l}`;
+}
+
+// Vor dem Spiel ESPN-Prognose, währenddessen Live-Wert, danach der Wert vom Anpfiff.
+async function loadWp(g) {
+  const old = S.wp.get(g.id);
+  const age = old ? Date.now() - old.at : Infinity;
+  if (old && (old.final || age < (g.status === "in" ? 55e3 : 30 * 60e3))) return false;
+  S.wp.set(g.id, { ...(old || { home: null }), at: Date.now() });   // nicht bei jedem Rendern neu fragen
+  const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${g.espn_id}`);
+  if (!r.ok) return false;
+  const d = await r.json();
+  const wp = d.winprobability || [];
+  let home = null, live = false;
+  if (g.status === "in" && wp.length) { home = wp[wp.length - 1].homeWinPercentage * 100; live = true; }
+  else if (d.predictor && d.predictor.homeTeam) {
+    home = parseFloat(d.predictor.homeTeam.gameProjection);
+    const away = parseFloat(d.predictor.awayTeam.gameProjection);
+    if (!isNaN(home) && !isNaN(away) && home + away > 0) home = home / (home + away) * 100;
+  } else if (wp.length) home = wp[0].homeWinPercentage * 100;
+  if (home == null || isNaN(home)) return false;
+  S.wp.set(g.id, { home, away: 100 - home, live, at: Date.now(), final: g.status === "post" });
+  return true;
+}
+
+let wpBusy = false;
+async function ensureWp(week) {
+  if (!S.showWp || wpBusy) return;
+  wpBusy = true;
+  try {
+    const gs = [...S.games.values()].filter(g => g.week === week && g.espn_id);
+    const got = await Promise.all(gs.map(g => loadWp(g).catch(() => false)));
+    if (got.some(Boolean)) render();
+  } finally { wpBusy = false; }
+}
+
 // ---------------------------------------------------------------- Aktionen
 async function pick(gid, choice) {
   const g = S.games.get(gid);
@@ -460,6 +512,11 @@ document.addEventListener("click", e => {
   else if (act === "winner") patchGame(gid, { winner: b.dataset.choice });
   else if (act === "backfill") backfill(gid, b.dataset.player, b.dataset.choice);
   else if (act === "sync") syncAll();
+  else if (act === "wp") {
+    S.showWp = !S.showWp;
+    try { localStorage.setItem("tippspiel:wp", S.showWp ? "1" : "0"); } catch {}
+    render();
+  }
 });
 
 document.addEventListener("submit", e => {
@@ -602,8 +659,15 @@ function renderWeek(n) {
     <section class="week">
       <h2>${title}<span class="wsub">${stand || (n <= 18 ? label : "")}
         ${done ? `&nbsp;·&nbsp; ${done} gewertet` : ""}</span></h2>
+      <div class="tools">
+        <button class="toggle${S.showWp ? " on" : ""}" data-act="wp" aria-pressed="${S.showWp}">
+          Siegchance ${S.showWp ? "an" : "aus"}</button>
+      </div>
       <ul class="games">${rows.join("")}</ul>
+      ${S.showWp ? `<p class="meta wpnote">Siegchance laut ESPN: vor dem Spiel die Prognose,
+        während des Spiels live.</p>` : ""}
     </section>`;
+  ensureWp(n);
 }
 
 function chip(who, g, live) {
@@ -646,8 +710,11 @@ function gameRow(g, time) {
     if (win === side) cls.push("winner");
     const pts = g[`${side}_score`];
     const sc = pts != null ? ` <span class="sc">${pts}</span>` : "";
+    const wp = S.showWp && S.wp.get(gid)?.home != null && S.wp.get(gid);
+    const pct = wp ? ` · <span class="wp${wp.live ? " live" : ""}">${Math.round(wp[side])} %</span>` : "";
     return `<button class="${cls.join(" ")}" data-act="pick" data-game="${gid}"
-      data-choice="${side}"${live ? " disabled" : ""}>${esc(g[side])}${sc}</button>`;
+      data-choice="${side}"${live ? " disabled" : ""}><span class="team">${esc(g[side])}${sc}</span>
+      <span class="sub">${record(g[side], g)}${pct}</span></button>`;
   };
 
   let res = "";
