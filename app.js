@@ -348,7 +348,6 @@ async function syncWeek(w) {
     if (Object.keys(patch).length) writes.push(updateDoc(doc(db, "games", String(g.id)), patch));
   }
   await Promise.all(writes);
-  await storePreWp(w);
 }
 
 // ESPN-Prognose vom Anpfiff einmal pro beendetem Spiel holen und speichern,
@@ -362,14 +361,22 @@ async function fetchPreWp(espnId) {
   const h = parseFloat(d.predictor?.homeTeam?.gameProjection), a = parseFloat(d.predictor?.awayTeam?.gameProjection);
   return !isNaN(h) && !isNaN(a) && h + a > 0 ? Math.round(h / (h + a) * 1000) / 10 : null;
 }
-async function storePreWp(w) {
+// Läuft nach dem eigentlichen Abgleich und nie mehr als 8 Spiele auf einmal,
+// damit die Live-Stände nicht warten müssen. Lehnt die Datenbank das Feld ab
+// (Regeln noch nicht veröffentlicht), wird es in dieser Sitzung nicht weiter versucht.
+let preWpBlocked = false;
+async function storePreWp() {
+  if (preWpBlocked) return;
   const todo = [...S.games.values()]
-    .filter(g => g.week === w && g.status === "post" && g.espn_id && g.pre_wp == null).slice(0, 16);
+    .filter(g => g.status === "post" && g.espn_id && g.pre_wp == null)
+    .sort((a, b) => b.kickoff - a.kickoff).slice(0, 8);
   await Promise.all(todo.map(async g => {
     try {
       const v = await fetchPreWp(g.espn_id);
       if (v != null) await updateDoc(doc(db, "games", String(g.id)), { pre_wp: v });
-    } catch { /* nächster Abgleich */ }
+    } catch (e) {
+      if (e.code === "permission-denied") preWpBlocked = true;
+    }
   }));
 }
 
@@ -379,9 +386,11 @@ function weeksToSync() {
   for (const g of S.games.values()) {
     const when = g.kickoff || (g.date_hint ? new Date(`${g.date_hint}T12:00:00Z`) : null);
     if (!g.winner && when && when <= soon) weeks.add(g.week);
-    if (g.status === "post" && g.pre_wp == null && g.espn_id) weeks.add(g.week);
   }
-  return [...weeks].sort((a, b) => a - b);
+  // laufende und aktuelle Wochen zuerst, dann der Rest
+  const live = w => [...S.games.values()].some(g => g.week === w && !g.winner && started(g));
+  const cur = currentWeek();
+  return [...weeks].sort((a, b) => (live(b) - live(a)) || ((b === cur) - (a === cur)) || a - b);
 }
 
 function somethingLive() {
@@ -390,13 +399,24 @@ function somethingLive() {
     || (g.kickoff && g.kickoff.getTime() > since && g.kickoff <= now())));
 }
 
+let syncing = false;
 async function syncAll() {
-  let ok = true;
-  for (const w of weeksToSync()) {
-    try { await syncWeek(w); } catch (e) { ok = false; console.warn(`ESPN Woche ${w}:`, e); }
-  }
-  S.sync = { at: now(), ok };
+  if (syncing) return;
+  syncing = true;
+  S.syncBusy = true;
   render();
+  let ok = true;
+  try {
+    for (const w of weeksToSync()) {
+      try { await syncWeek(w); } catch (e) { ok = false; console.warn(`ESPN Woche ${w}:`, e); }
+    }
+    S.sync = { at: now(), ok };
+  } finally {
+    syncing = false;
+    S.syncBusy = false;
+    render();
+  }
+  storePreWp();                          // im Hintergrund, blockiert nichts
 }
 
 let syncTimer = null;
@@ -849,7 +869,9 @@ function renderWeek(n) {
       ${paperMissing ? `<a class="note paper" href="#nachtragen=${n}">📝 ${paperMissing === 1 ? "1 Papiertipp fehlt"
         : `${paperMissing} Papiertipps fehlen`} in dieser Woche noch – nachtragen</a>` : ""}
       <div class="tools">
-        <button class="toggle" data-act="ics">⏰ Kalender-Erinnerung</button>
+        <button class="toggle sync-btn${S.syncBusy ? " busy" : ""}" data-act="sync" title="Ergebnisse jetzt von ESPN holen">
+          <span class="spin">↻</span> ${S.syncBusy ? "lädt …" : S.sync.at ? `Stand ${berlin(S.sync.at).time}` : "Aktualisieren"}</button>
+        <button class="toggle" data-act="ics">⏰ Erinnerung</button>
         <button class="toggle${S.showWp ? " on" : ""}" data-act="wp" aria-pressed="${S.showWp}">
           Siegchance ${S.showWp ? "an" : "aus"}</button>
       </div>
@@ -923,7 +945,7 @@ function gameRow(g, time) {
 
   const zeit = time || `<form class="timeform" data-act="zeit" data-game="${gid}">
     <input type="datetime-local" name="kickoff" required><button type="submit">Zeit</button></form>`;
-  return `<li class="game${live ? " live" : ""}">
+  return `<li class="game${live ? " live" : ""}${live && !win ? " running" : ""}">
     <div class="matchup">
       <span class="time">${zeit}</span>
       ${btn("away")}<span class="at">@</span>${btn("home")}
