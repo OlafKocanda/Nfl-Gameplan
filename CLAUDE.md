@@ -98,7 +98,8 @@ Woche aus ESPN-Siegchance (vor dem Spiel `pre`, live `home`, danach das
 Ergebnis) und den Tipps. Spiele vor Anpfiff zählen für beide gleich (beide
 Tipps als „nach ESPN-Wahrscheinlichkeit“ geschätzt, auch der eigene): vor der
 Woche haben beide exakt dieselbe Chance, nichts Geheimes fließt ein, beide
-Geräte zeigen dasselbe. Remis wird als eigener Wert gezeigt. Verlauf: vor der
+Geräte zeigen dasselbe. Remis wird als eigener Wert gezeigt, in der Grafik als mittleres Band der
+gestapelten Fläche (Anni oben, Olaf unten). Verlauf: vor der
 Woche, nach jedem beendeten Spiel, live.
 
 Farben Anni/Olaf sind mit dem dataviz-Validator auf Farbschwäche geprüft

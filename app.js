@@ -687,32 +687,47 @@ function oddsCard(week) {
   </div>`;
 }
 
+// Gestapelte Fläche wie der Balken: Anni oben, Remis in der Mitte, Olaf unten.
 function drawOdds(el, steps) {
   const W = Math.max(280, el.clientWidth), H = 190;
   const key = JSON.stringify([W, steps.map(s => [s.label, Math.round(s.a), Math.round(s.o), Math.round(s.t)])]);
   if (el.dataset.key === key) return;
   el.dataset.key = key;
-  const m = { t: 12, r: 78, b: 22, l: 42 };
+  const m = { t: 10, r: 78, b: 22, l: 42 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const x = i => m.l + (steps.length === 1 ? iw / 2 : i * iw / (steps.length - 1));
   const y = v => m.t + ih - v / 100 * ih;
-  const ser = [{ k: "a", cls: "anni", name: "Anni" }, { k: "o", cls: "olaf", name: "Olaf" }, { k: "t", cls: "espn", name: "Remis" }];
+  // Grenzen von unten: 0 | Olaf | Olaf+Remis | 100
+  const lo = steps.map(st => st.o), mid = steps.map(st => st.o + st.t);
+  const band = (top, bot) => `M${top.map((v, i) => `${x(i)},${y(v)}`).join("L")}` +
+    `L${[...bot].reverse().map((v, i) => `${x(bot.length - 1 - i)},${y(v)}`).join("L")}Z`;
+  const ones = steps.map(() => 100), zeros = steps.map(() => 0);
   let grid = "";
-  for (const v of [0, 50, 100]) grid += `<line class="grid" x1="${m.l}" x2="${m.l + iw}" y1="${y(v)}" y2="${y(v)}"/>
-    <text class="ax" x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v} %</text>`;
+  for (const v of [0, 50, 100]) grid += `<text class="ax" x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v} %</text>`;
   const xl = `<text class="ax" x="${m.l}" y="${H - 6}">Start</text>
     <text class="ax" x="${m.l + iw}" y="${H - 6}" text-anchor="end">${steps[steps.length - 1].live ? "jetzt" : "Ende"}</text>`;
-  const ends = ser.map(s => ({ s, v: steps[steps.length - 1][s.k], y: y(steps[steps.length - 1][s.k]) })).sort((a, b) => a.y - b.y);
-  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
-  const lines = ser.map(s => `<path class="ln ${s.cls}" d="${steps.map((st, i) => `${i ? "L" : "M"}${x(i)},${y(st[s.k])}`).join("")}"/>
-    ${steps.map((st, i) => `<circle class="dot ${s.cls}" cx="${x(i)}" cy="${y(st[s.k])}" r="${steps.length > 12 ? 3 : 4}"/>`).join("")}`).join("");
-  const tags = ends.map(e => `<text class="tag ${e.s.cls}" x="${m.l + iw + 8}" y="${e.y + 4}">${e.s.name} ${Math.round(e.v)} %</text>`).join("");
+  const last = steps[steps.length - 1];
+  const tags = [
+    { cls: "anni", name: "Anni", v: last.a, c: last.o + last.t + last.a / 2 },
+    { cls: "espn", name: "Remis", v: last.t, c: last.o + last.t / 2 },
+    { cls: "olaf", name: "Olaf", v: last.o, c: last.o / 2 },
+  ].map(t => ({ ...t, y: y(t.c) }));
+  for (let i = 1; i < tags.length; i++) if (tags[i].y - tags[i - 1].y < 14) tags[i].y = tags[i - 1].y + 14;
+  const over = tags[tags.length - 1].y - (m.t + ih);
+  if (over > 0) tags.forEach(t => (t.y -= over));
   el.innerHTML = `
-    <div class="legend"><span class="lg anni"><i></i>Anni gewinnt</span><span class="lg olaf"><i></i>Olaf gewinnt</span>
-      <span class="lg espn"><i></i>Remis</span></div>
+    <div class="legend"><span class="lg anni"><i></i>Anni gewinnt</span><span class="lg tie"><i></i>Remis</span>
+      <span class="lg olaf"><i></i>Olaf gewinnt</span></div>
     <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
-      aria-label="Siegchance der Woche: Anni ${Math.round(steps.at(-1).a)} Prozent, Olaf ${Math.round(steps.at(-1).o)} Prozent, Remis ${Math.round(steps.at(-1).t)} Prozent">
-      ${grid}${xl}<line class="cross" y1="${m.t}" y2="${m.t + ih}" x1="-10" x2="-10"/>${lines}${tags}
+      aria-label="Siegchance der Woche: Anni ${Math.round(last.a)} Prozent, Remis ${Math.round(last.t)} Prozent, Olaf ${Math.round(last.o)} Prozent">
+      <path class="area anni" d="${band(ones, mid)}"/>
+      <path class="area tie" d="${band(mid, lo)}"/>
+      <path class="area olaf" d="${band(lo, zeros)}"/>
+      <path class="edge" d="M${mid.map((v, i) => `${x(i)},${y(v)}`).join("L")}"/>
+      <path class="edge" d="M${lo.map((v, i) => `${x(i)},${y(v)}`).join("L")}"/>
+      <line class="half" x1="${m.l}" x2="${m.l + iw}" y1="${y(50)}" y2="${y(50)}"/>
+      ${grid}${xl}<line class="cross" y1="${m.t}" y2="${m.t + ih}" x1="-10" x2="-10"/>
+      ${tags.map(t => `<text class="tag ${t.cls}" x="${m.l + iw + 8}" y="${t.y + 4}">${t.name} ${Math.round(t.v)} %</text>`).join("")}
       <rect class="hit" x="${m.l - 10}" y="0" width="${iw + 20}" height="${H}"/>
     </svg>
     <div class="tip" hidden></div>`;
@@ -724,8 +739,8 @@ function drawOdds(el, steps) {
     const st = steps[i];
     tip.innerHTML = `<b>${esc(st.label)}</b>${st.sub ? `<small class="tsub">${esc(st.sub)}</small>` : ""}
       <span class="tr"><i class="anni"></i>Anni<em>${Math.round(st.a)} %</em></span>
-      <span class="tr"><i class="olaf"></i>Olaf<em>${Math.round(st.o)} %</em></span>
-      <span class="tr"><i></i>Remis<em>${Math.round(st.t)} %</em></span>`;
+      <span class="tr"><i class="tie"></i>Remis<em>${Math.round(st.t)} %</em></span>
+      <span class="tr"><i class="olaf"></i>Olaf<em>${Math.round(st.o)} %</em></span>`;
     tip.hidden = false;
     tip.style.left = `${Math.min(Math.max(x(i) - tip.offsetWidth / 2, 0), W - tip.offsetWidth)}px`;
   };
