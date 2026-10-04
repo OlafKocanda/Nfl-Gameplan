@@ -656,7 +656,7 @@ document.addEventListener("change", e => {
   if (e.target.id === "w") location.hash = `#woche=${e.target.value}`;
 });
 window.addEventListener("hashchange", () => {
-  if (location.hash === "#nachtragen" && S.me) refreshBackfill();
+  if (location.hash.startsWith("#nachtragen") && S.me) refreshBackfill();
   render();
 });
 
@@ -772,7 +772,7 @@ function render() {
     try { seen = localStorage.getItem("tippspiel:intro") === "1"; } catch {}
     if (h === "#hilfe" || !seen) renderIntro();
     else if (h === "#tabelle") renderTable();
-    else if (h === "#nachtragen" && backfillOpen()) renderBackfill();
+    else if (h.startsWith("#nachtragen") && backfillOpen()) renderBackfill(+(h.match(/nachtragen=(\d+)/) || [])[1]);
     else if (h === "#statistik") renderStats();
     else renderWeek(+(h.match(/woche=(\d+)/) || [])[1] || currentWeek());
     centerWeek();
@@ -817,7 +817,7 @@ function renderWeek(n) {
       <h2>${title}<span class="wsub">${stand || (n <= 18 ? label : "")}
         ${done ? `&nbsp;·&nbsp; ${done} gewertet` : ""}</span></h2>
       ${weekBanner(n, sc)}
-      ${paperMissing ? `<a class="note paper" href="#nachtragen">📝 ${paperMissing === 1 ? "1 Papiertipp fehlt"
+      ${paperMissing ? `<a class="note paper" href="#nachtragen=${n}">📝 ${paperMissing === 1 ? "1 Papiertipp fehlt"
         : `${paperMissing} Papiertipps fehlen`} in dieser Woche noch – nachtragen</a>` : ""}
       <div class="tools">
         <button class="toggle" data-act="ics">⏰ Kalender-Erinnerung</button>
@@ -955,14 +955,26 @@ function renderTable() {
     </section>`;
 }
 
-function renderBackfill() {
-  const games = [...S.games.values()].filter(isBackfill)
+function renderBackfill(want) {
+  const all = [...S.games.values()].filter(isBackfill)
     .sort((a, b) => a.kickoff - b.kickoff || a.id - b.id);
-  const missing = p => games.filter(g => !(p === S.me ? S.mine : S.theirs).has(g.id)).length;
-  const rows = [];
-  let lastWeek = null;
-  for (const g of games) {
-    if (g.week !== lastWeek) { rows.push(`<li class="dayhead">Woche ${g.week}</li>`); lastWeek = g.week; }
+  const has = (p, id) => (p === S.me ? S.mine : S.theirs).has(id);
+  const missingIn = gs => gs.reduce((k, g) => k + (has("anni", g.id) ? 0 : 1) + (has("olaf", g.id) ? 0 : 1), 0);
+  const weeks = [...new Set(all.map(g => g.week))];
+  // ohne Angabe: erste Woche, in der noch etwas fehlt
+  const week = weeks.includes(want) ? want
+    : weeks.find(w => missingIn(all.filter(g => g.week === w))) ?? weeks[0];
+  const games = all.filter(g => g.week === week);
+  // Woche in der Adresse festhalten, damit die Seite beim Eintragen nicht weiterspringt
+  if (want !== week) history.replaceState(null, "", `#nachtragen=${week}`);
+
+  const tabs = weeks.map(w => {
+    const m = missingIn(all.filter(g => g.week === w));
+    return `<a class="bftab${w === week ? " sel" : ""}${m ? "" : " full"}" href="#nachtragen=${w}">
+      Woche ${w}<span class="cnt">${m ? m : "✓"}</span></a>`;
+  }).join("");
+
+  const rows = games.map(g => {
     const b = berlin(g.kickoff);
     const sieger = g.winner ? (g.winner === "tie" ? "Unentschieden" : esc(g[g.winner])) : "offen";
     const line = p => {
@@ -973,24 +985,34 @@ function renderBackfill() {
       return `<div class="bfline"><span class="bfname ${p}">${PLAYERS[p]}</span>${btn("away")}${btn("home")}</div>`;
     };
     const note = S.note[g.id] ? `<p class="meta rownote">${esc(S.note[g.id])}</p>` : "";
-    rows.push(`<li class="game bfgame">
+    return `<li class="game bfgame">
       <p class="bfhead"><span>${b.wd} ${b.day}</span> ${esc(g.away)} @ ${esc(g.home)}
         ${g.away_score != null ? `<span class="bfscore">${g.away_score}:${g.home_score}</span>` : ""}
         <span class="bfwin">Sieger ${sieger}</span></p>
       ${line("anni")}${line("olaf")}${note}
-    </li>`);
-  }
-  const fehlt = Object.keys(PLAYERS).map(p => `${PLAYERS[p]} ${missing(p) ? `${missing(p)} offen` : "komplett"}`).join(" · ");
+    </li>`;
+  }).join("");
+
+  const left = p => games.filter(g => !has(p, g.id)).length;
+  const fehlt = Object.keys(PLAYERS).map(p => `${PLAYERS[p]} ${left(p) ? `${left(p)} offen` : "komplett ✓"}`).join(" · ");
   const ohne = Object.keys(PLAYERS).filter(p => !S.players[p]);
-  document.title = "Papiertipps - Tippspiel";
+  const next = weeks.find(w => w > week && missingIn(all.filter(g => g.week === w)))
+    ?? weeks.find(w => w !== week && missingIn(all.filter(g => g.week === w)));
+  const done = !missingIn(games);
+  document.title = `Papiertipps Woche ${week} - Tippspiel`;
   wrap.innerHTML = nav(null) + `
     <section class="week">
-      <h2>Papiertipps<span class="wsub">${fehlt}</span></h2>
+      <h2>Papiertipps</h2>
       <p class="meta bfintro">Die Tipps vom Papier für die Spiele vor dem Start der App.
         Einer von euch kann beide eintragen, jeder Klick wird sofort gespeichert und zählt
         gleich in der Tabelle. Möglich bis einschließlich 17.10.2026.
         ${ohne.length ? `<br>${ohne.map(p => PLAYERS[p]).join(", ")} muss sich zuerst einmal anmelden.` : ""}</p>
-      <ul class="games">${rows.join("")}</ul>
+      <div class="bftabs">${tabs}</div>
+      <h3 class="bfweek">Woche ${week}<span class="wsub">${fehlt}</span></h3>
+      <ul class="games">${rows}</ul>
+      ${done ? (next ? `<a class="banner next" href="#nachtragen=${next}">✓ Woche ${week} komplett – weiter zu Woche ${next} →</a>`
+        : `<a class="banner next" href="#woche=${currentWeek()}">✓ Alle Papiertipps eingetragen – zur aktuellen Woche →</a>`) : ""}
+      ${footer()}
     </section>`;
 }
 
