@@ -698,7 +698,7 @@ function drawOdds(el, steps) {
   const key = JSON.stringify([W, steps.map(s => [s.label, Math.round(s.a), Math.round(s.o), Math.round(s.t)])]);
   if (el.dataset.key === key) return;
   el.dataset.key = key;
-  const m = { t: 10, r: 78, b: 22, l: 42 };
+  const m = { t: 10, r: 78, b: 36, l: 42 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const x = i => m.l + (steps.length === 1 ? iw / 2 : i * iw / (steps.length - 1));
   const y = v => m.t + ih - v / 100 * ih;
@@ -709,8 +709,12 @@ function drawOdds(el, steps) {
   const ones = steps.map(() => 100), zeros = steps.map(() => 0);
   let grid = "";
   for (const v of [0, 50, 100]) grid += `<text class="ax" x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v} %</text>`;
-  const xl = `<text class="ax" x="${m.l}" y="${H - 6}">Start</text>
-    <text class="ax" x="${m.l + iw}" y="${H - 6}" text-anchor="end">${steps[steps.length - 1].live ? "jetzt" : "Ende"}</text>`;
+  // x-Achse: Anzahl beendeter Spiele (0 = vor der Woche), bei laufenden Spielen zuletzt "live"
+  const every = Math.ceil(steps.length / 10);
+  const xl = steps.map((st, i) => (i % every && i !== steps.length - 1) ? "" :
+    `<line class="tick" x1="${x(i)}" x2="${x(i)}" y1="${m.t + ih}" y2="${m.t + ih + 4}"/>
+     <text class="ax" x="${x(i)}" y="${m.t + ih + 15}" text-anchor="middle">${st.live ? "live" : i}</text>`).join("") +
+    `<text class="ax cap" x="${m.l + iw / 2}" y="${H - 3}" text-anchor="middle">beendete Spiele</text>`;
   const last = steps[steps.length - 1];
   const tags = [
     { cls: "anni", name: "Anni", v: last.a, c: last.o + last.t + last.a / 2 },
