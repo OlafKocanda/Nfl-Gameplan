@@ -364,20 +364,30 @@ async function fetchPreWp(espnId) {
 // Läuft nach dem eigentlichen Abgleich und nie mehr als 8 Spiele auf einmal,
 // damit die Live-Stände nicht warten müssen. Lehnt die Datenbank das Feld ab
 // (Regeln noch nicht veröffentlicht), wird es in dieser Sitzung nicht weiter versucht.
-let preWpBlocked = false;
+let preWpBlocked = false, preWpRunning = false;
+const preWpTried = new Set();           // je Durchlauf nur einmal je Spiel versuchen
 async function storePreWp() {
-  if (preWpBlocked) return;
-  const todo = [...S.games.values()]
-    .filter(g => g.status === "post" && g.espn_id && g.pre_wp == null)
-    .sort((a, b) => b.kickoff - a.kickoff).slice(0, 8);
-  await Promise.all(todo.map(async g => {
-    try {
-      const v = await fetchPreWp(g.espn_id);
-      if (v != null) await updateDoc(doc(db, "games", String(g.id)), { pre_wp: v });
-    } catch (e) {
-      if (e.code === "permission-denied") preWpBlocked = true;
+  if (preWpBlocked || preWpRunning) return;
+  preWpRunning = true;
+  preWpTried.clear();                   // Fehlgeschlagene beim nächsten Abgleich erneut versuchen
+  try {
+    // in Sechserpaketen, bis alles da ist; läuft im Hintergrund
+    for (;;) {
+      const todo = [...S.games.values()]
+        .filter(g => g.status === "post" && g.espn_id && g.pre_wp == null && !preWpTried.has(g.id))
+        .sort((a, b) => b.kickoff - a.kickoff).slice(0, 6);
+      if (!todo.length || preWpBlocked) break;
+      await Promise.all(todo.map(async g => {
+        preWpTried.add(g.id);
+        try {
+          const v = await fetchPreWp(g.espn_id);
+          if (v != null) await updateDoc(doc(db, "games", String(g.id)), { pre_wp: v });
+        } catch (e) {
+          if (e.code === "permission-denied") preWpBlocked = true;
+        }
+      }));
     }
-  }));
+  } finally { preWpRunning = false; }
 }
 
 function weeksToSync() {
@@ -1032,6 +1042,7 @@ function renderTable() {
   const counted = {};
   for (const g of S.games.values()) if (g.winner) counted[g.week] = (counted[g.week] || 0) + 1;
   const es = espnStats();
+  const espnPending = [...S.games.values()].filter(g => g.winner && g.winner !== "tie" && g.pre_wp == null).length;
   const body = WEEKS.filter(([w]) => counted[w]).map(([w, l]) => {
     const r = weekResult(w, sc);
     const cls = r.a > r.o ? "a" : r.o > r.a ? "o" : "t";
@@ -1059,7 +1070,9 @@ function renderTable() {
             <td class="of">${sc.wins.tie}× gleich</td></tr>
         </tbody>
       </table>
-      <p class="meta bfintro">ESPN tippt immer den Favoriten laut eigener Prognose zum Anpfiff.</p>
+      <p class="meta bfintro">ESPN tippt immer den Favoriten laut eigener Prognose zum Anpfiff.
+        ${espnPending ? `<strong>ESPN-Prognosen werden noch geladen: ${es.hit[1]} von ${es.hit[1] + espnPending}
+          Spielen ausgewertet.</strong>` : ""}</p>
     </section>
     <section class="week">
       <h2>Bilanz<span class="wsub">Regular Season ${sc.reg.anni}:${sc.reg.olaf}
