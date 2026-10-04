@@ -32,7 +32,7 @@ die Ergebnisse kommen live von ESPN. Kostenlos, kein eigener Server.
   Sonntagsspielen). Die Zeiten sind die zum Zeitpunkt des Herunterladens
 - **Statistik:** Punkteverlauf (Anni, Olaf, ESPN); Duell mit direkten
   Duellen, Serien, Wochensieg-Serie und Aufholpotenzial; Rekorde; mutigster
-  Treffer; Trefferquote nach Favoritenstärke, Anstoßzeit,
+  Treffer; Trefferquote nach Favoritenstärke, Anstoßzeit, Vorlauf des Tipps,
   Punkteabstand und Spielart (Division, Conference, AFC/NFC); Lieblings- und
   Problemteams und alle 32 Teams als Kacheln
 - Fällt ESPN aus, kann man Sieger, Zeit und Paarung per Hand eintragen
