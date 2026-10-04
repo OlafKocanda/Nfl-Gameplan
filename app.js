@@ -60,7 +60,6 @@ const S = {
   mine: new Map(),    // id -> "away" | "home"
   tipped: new Set(),  // "<id>_<spieler>"
   theirs: new Map(),  // id -> Tipp des anderen, erst nach Anpfiff
-  at: new Map(),      // "<id>_<spieler>" -> Zeitpunkt des Tipps (für die Statistik)
   sync: { at: null, ok: null },
   note: {},           // id -> Hinweis an einer Spielzeile
   wp: new Map(),      // id -> {home, away, live, at}  Siegchance von ESPN
@@ -162,7 +161,7 @@ onAuthStateChanged(auth, async user => {
   clearTimeout(syncTimer);
   syncTimer = null;
   Object.assign(S, { user, me: null, games: new Map(), mine: new Map(), tipped: new Set(),
-    theirs: new Map(), at: new Map(), sync: { at: null, ok: null }, note: {} });
+    theirs: new Map(), sync: { at: null, ok: null }, note: {} });
   if (!user) return renderLogin();
   wrap.innerHTML = `<p class="meta pad">Lade …</p>`;
   unsub.push(onSnapshot(doc(db, "meta", "players"), snap => {
@@ -220,11 +219,7 @@ async function start() {
   }, err => fail(err)));
 
   unsub.push(onSnapshot(query(collection(db, "picks"), where("uid", "==", S.user.uid)), snap => {
-    snap.docChanges().forEach(ch => {
-      const d = ch.doc.data({ serverTimestamps: "estimate" });
-      S.mine.set(+d.game, d.choice);
-      if (d.at) S.at.set(`${d.game}_${S.me}`, d.at.toDate());
-    });
+    snap.docChanges().forEach(ch => S.mine.set(+ch.doc.data().game, ch.doc.data().choice));
     render();
   }, err => fail(err)));
 
@@ -265,9 +260,7 @@ function loadCache() {
   try { return JSON.parse(localStorage.getItem(cacheKey()) || "{}"); } catch { return {}; }
 }
 function saveCache() {
-  const o = other();
-  const keep = [...S.theirs].filter(([id]) => !isBackfill(S.games.get(id) || {}))
-    .map(([id, c]) => [id, [c, S.at.get(`${id}_${o}`)?.getTime() || 0]]);
+  const keep = [...S.theirs].filter(([id]) => !isBackfill(S.games.get(id) || {}));
   try { localStorage.setItem(cacheKey(), JSON.stringify(Object.fromEntries(keep))); } catch {}
 }
 let revealing = null, revealAgain = false;
@@ -277,9 +270,7 @@ async function reveal() {
     if (!S.theirs.size) {
       for (const [k, v] of Object.entries(loadCache())) {
         if (isBackfill(S.games.get(+k) || {})) continue;
-        if (!Array.isArray(v) || !v[1]) continue;           // alte Einträge ohne Zeitpunkt neu holen
-        S.theirs.set(+k, v[0]);
-        S.at.set(`${k}_${other()}`, new Date(v[1]));
+        S.theirs.set(+k, Array.isArray(v) ? v[0] : v);      // kurzzeitig mit Zeitpunkt gespeichert
       }
     }
     const o = other();
@@ -290,11 +281,7 @@ async function reveal() {
       await Promise.all(todo.slice(i, i + 20).map(async g => {
         try {
           const snap = await getDoc(doc(db, "picks", `${g.id}_${o}`));
-          if (snap.exists()) {
-            S.theirs.set(g.id, snap.data().choice);
-            if (snap.data().at) S.at.set(`${g.id}_${o}`, snap.data().at.toDate());
-            got = true;
-          }
+          if (snap.exists()) { S.theirs.set(g.id, snap.data().choice); got = true; }
         } catch { /* noch nicht freigegeben */ }
       }));
     }
@@ -968,7 +955,7 @@ function renderWeek(n) {
           <span class="spin">↻</span> ${S.syncBusy ? "lädt …" : S.sync.at ? `Stand ${berlin(S.sync.at).time}` : "Aktualisieren"}</button>
         <button class="toggle" data-act="ics">⏰ Erinnerung</button>
         <button class="toggle${S.showWp ? " on" : ""}" data-act="wp" aria-pressed="${S.showWp}">
-          Siegchance ${S.showWp ? "an" : "aus"}</button>
+          ${S.showWp ? "✓ " : ""}Siegchance</button>
       </div>
       <ul class="games">${rows.join("")}</ul>
       ${S.showWp ? `<p class="meta wpnote">Siegchance laut ESPN: vor dem Spiel die Prognose,
@@ -1012,17 +999,23 @@ function gameRow(g, time) {
     </li>`;
   }
 
+  // Wer hat auf dieses Team getippt? Der fremde Tipp erst nach Anpfiff.
+  const pickOf = p => (p === S.me ? S.mine.get(gid) : S.theirs.get(gid));
   const btn = side => {
     const cls = ["pick"];
     if (S.mine.get(gid) === side) cls.push("chosen");
     if (win === side) cls.push("winner");
+    const by = Object.keys(PLAYERS).filter(p => pickOf(p) === side);
+    by.forEach(p => cls.push(`by-${p}`));
+    const who = by.length ? `<span class="who">${by.map(p =>
+      `<i class="${p}" title="Tipp von ${PLAYERS[p]}">${PLAYERS[p][0]}</i>`).join("")}</span>` : "";
     const pts = g[`${side}_score`];
     const sc = pts != null ? `<span class="sc">${pts}</span>` : "";
     const wp = S.showWp && S.wp.get(gid)?.home != null && S.wp.get(gid);
     const pct = wp ? `<span class="sub wp${wp.live ? " live" : ""}">${Math.round(wp[side])} %</span>` : "";
     return `<button class="${cls.join(" ")}" data-act="pick" data-game="${gid}"
       data-choice="${side}"${live ? " disabled" : ""}>${logo(g[side])}<span class="tx">
-      <span class="team">${esc(g[side])}</span><span class="sub">${record(g[side], g)}</span>${pct}</span>${sc}</button>`;
+      <span class="team">${esc(g[side])}</span><span class="sub">${record(g[side], g)}</span>${pct}</span>${sc}${who}</button>`;
   };
 
   let res = "";
@@ -1128,7 +1121,7 @@ function renderBackfill(want) {
     const sieger = g.winner ? (g.winner === "tie" ? "Unentschieden" : esc(g[g.winner])) : "offen";
     const line = p => {
       const c = (p === S.me ? S.mine : S.theirs).get(g.id);
-      const btn = side => `<button class="bf${c === side ? " chosen" : ""}${g.winner === side ? " won" : ""}"
+      const btn = side => `<button class="bf${c === side ? ` chosen by-${p}` : ""}${g.winner === side ? " won" : ""}"
         data-act="backfill" data-game="${g.id}" data-player="${p}" data-choice="${side}"
         ${S.players[p] ? "" : "disabled"}>${logo(g[side])}${esc(g[side])}</button>`;
       return `<div class="bfline"><span class="bfname ${p}">${PLAYERS[p]}</span>${btn("away")}${btn("home")}</div>`;
@@ -1345,27 +1338,6 @@ function renderStats() {
       <span class="bravep">bei ${Math.round(x.prob)} %</span><small>gegen ${esc(opp)} · ${weekName(x.g.week)}</small>`;
   };
 
-  // --- Früh- oder Spättipper (Tipps nach Anpfiff, z. B. Papiertipps, zählen nicht)
-  const lead_h = (p, g) => {
-    const at = S.at.get(`${g.id}_${p}`);
-    return at && g.kickoff && at < g.kickoff ? (g.kickoff - at) / 3600e3 : null;
-  };
-  const median = xs => { const v = [...xs].sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : null; };
-  const fmtLead = h => (h == null ? "–" : h < 1 ? `${Math.round(h * 60)} Min.` : h < 48 ? `${Math.round(h)} Std.` : `${Math.round(h / 24)} Tage`);
-  const medLead = p => fmtLead(median(finished.map(g => lead_h(p, g)).filter(x => x != null)));
-  const leadRow = (label, lo, hi) => ({ label, test: null, lo, hi });
-  const leadRows = [leadRow("Kurz vor Anpfiff", 0, 2), leadRow("Am Spieltag", 2, 24), leadRow("Früher", 24, 1e9)];
-  const leadCell = (p, lo, hi) => {
-    let ok = 0, n = 0;
-    for (const g of finished) {
-      const h = lead_h(p, g);
-      if (h == null || h < lo || h >= hi) continue;
-      n++;
-      if (hit(p, g)) ok++;
-    }
-    return cell([ok, n]);
-  };
-
   // --- Team-Kacheln: Trefferquote in allen Spielen eines Teams
   const teamRate = (p, t) => rate(p, g => g.away === t || g.home === t);
   const bar = (p, t) => {
@@ -1482,16 +1454,6 @@ function renderStats() {
         { label: "Monday Night", sub: "Nacht auf Dienstag", test: g => slotOf(g) === "mnf" },
         { label: "Sonstige", sub: "Samstag, Feiertage", test: g => ["sat", "other"].includes(slotOf(g)) },
       ].filter(r => finished.some(r.test)))}
-      <h3 class="subh">Früh- oder Spättipper<span class="wsub">wie lange vor Anpfiff getippt</span></h3>
-      <table class="tbl duo rates">
-        <thead><tr><th></th><th>Anni</th><th>Olaf</th></tr></thead>
-        <tbody>
-          <tr><th>Typischer Vorlauf<small>Median</small></th><td>${medLead("anni")}</td><td>${medLead("olaf")}</td></tr>
-          ${leadRows.map(r => `<tr><th>${r.label}<small>${r.hi === 2 ? "unter 2 Std." : r.hi === 24 ? "2 bis 24 Std." : "mehr als 1 Tag"}</small></th>
-            <td>${leadCell("anni", r.lo, r.hi)}</td><td>${leadCell("olaf", r.lo, r.hi)}</td></tr>`).join("")}
-        </tbody>
-      </table>
-      <p class="meta bfintro">Papiertipps zählen hier nicht, ihr Zeitpunkt liegt nach dem Anpfiff.</p>
       <h3 class="subh">Knappe Spiele oder Kantersiege<span class="wsub">Punkteabstand am Ende</span></h3>
       ${rateTable([
         { label: "Knapp", sub: "bis 7 Punkte", test: g => margin(g) != null && margin(g) <= 7 },

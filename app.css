@@ -621,3 +621,39 @@ button.whobtn { flex: 1; padding: 0; background: none; border: 0; min-height: 0;
 .tbl.rates td { white-space: nowrap; font-size: 19px; padding: 9px 7px; }
 .tbl.rates th { padding-right: 4px; }
 .tbl.rates thead th { padding: 9px 7px; }
+
+/* ------------------------------------------- Tipp-Farben in den Kästchen */
+.pick { position: relative; }
+.pick.chosen { box-shadow: none; border-color: transparent; }   /* ersetzt durch Spielerfarben */
+.pick.by-anni {
+  background: color-mix(in srgb, var(--anni) 13%, var(--card));
+  border-color: var(--anni); box-shadow: inset 0 0 0 1px var(--anni);
+}
+.pick.by-olaf {
+  background: color-mix(in srgb, var(--olaf) 13%, var(--card));
+  border-color: var(--olaf); box-shadow: inset 0 0 0 1px var(--olaf);
+}
+.pick.by-anni.by-olaf {          /* beide auf dasselbe Team */
+  border-color: transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(135deg, var(--anni) 0 50%, var(--olaf) 50% 100%) border-box;
+  border: 2.5px solid transparent; box-shadow: none;
+}
+.pick .who { position: absolute; top: -7px; left: -5px; display: flex; gap: 2px; }
+.pick .who i {
+  display: flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 50%;
+  font-family: Inter, ui-sans-serif, sans-serif; font-style: normal; font-size: 10px; font-weight: 700;
+  color: #fff; box-shadow: 0 0 0 2px var(--card);
+}
+.pick .who i.anni { background: var(--anni); }
+.pick .who i.olaf { background: var(--olaf); }
+
+/* Papiertipps: gewählter Knopf in der Farbe der Zeile */
+.bf.chosen.by-anni { border-color: var(--anni); box-shadow: inset 0 0 0 1px var(--anni);
+  background: color-mix(in srgb, var(--anni) 13%, var(--card)); }
+.bf.chosen.by-olaf { border-color: var(--olaf); box-shadow: inset 0 0 0 1px var(--olaf);
+  background: color-mix(in srgb, var(--olaf) 13%, var(--card)); }
+
+.tools .toggle { font-size: 12.5px; padding: 4px 10px; }
