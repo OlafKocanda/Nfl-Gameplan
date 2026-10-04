@@ -574,3 +574,50 @@ button.whobtn { flex: 1; padding: 0; background: none; border: 0; min-height: 0;
 .banner.zettel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-color: var(--olaf); }
 .banner.zettel button { padding: 8px 14px; min-height: 38px; font-size: 14px; }
 .zmsg { font-weight: 600; color: var(--ink); }
+
+/* -------------------------------------------------- Statistik: Erweiterung */
+.subh {
+  display: flex; flex-wrap: wrap; align-items: baseline; margin: 20px 0 0;
+  font-family: var(--display); font-size: 22px; font-weight: 700;
+}
+.tv .anni, .pn.anni { color: var(--anni); }
+.tv .olaf, .pn.olaf { color: var(--olaf); }
+.tv .muted { margin: 0 4px; }
+.pn { text-transform: none; letter-spacing: 0; }
+.banner.potential { line-height: 1.45; }
+.tbl.rates td { line-height: 1.1; }
+.tbl.rates td small, .tbl.duo td small {
+  display: block; margin-top: 3px; font-family: Inter, ui-sans-serif, sans-serif;
+  font-size: 11px; font-weight: 500; color: var(--ink-2);
+}
+.tile.brave { gap: 4px; }
+.bravet { display: flex; align-items: center; gap: 6px; margin-top: 4px;
+  font-family: var(--display); font-size: 30px; font-weight: 700; line-height: 1; }
+.bravet .logo { width: 30px; height: 30px; object-fit: contain; }
+.bravep { font-weight: 700; color: var(--live); }
+.tile.brave small { font-size: 12px; color: var(--ink-2); }
+
+.teamgrid { margin-top: 10px; }
+.divrow { margin-bottom: 10px; }
+.divname { display: block; margin: 0 0 5px 2px; font-size: 11.5px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.ttiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.ttile {
+  display: flex; flex-direction: column; align-items: center; padding: 8px 6px 7px;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 12px; box-shadow: var(--shadow);
+}
+.ttile .logo { width: 26px; height: 26px; object-fit: contain; }
+.ttile b { font-family: var(--display); font-size: 16px; line-height: 1.1; margin: 2px 0 4px; }
+.tb { display: flex; align-items: center; gap: 4px; width: 100%; font-size: 10.5px; color: var(--ink-2); }
+.tb + .tb { margin-top: 3px; }
+.tbl-l { width: 9px; font-weight: 700; }
+.tb.anni .tbl-l { color: var(--anni); }
+.tb.olaf .tbl-l { color: var(--olaf); }
+.tbar { flex: 1; height: 5px; border-radius: 99px; background: var(--soft); overflow: hidden; }
+.tbar i { display: block; height: 100%; border-radius: 99px; }
+.tb.anni .tbar i { background: var(--anni); }
+.tb.olaf .tbar i { background: var(--olaf); }
+.tbv { width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
+.tbl.rates td { white-space: nowrap; font-size: 19px; padding: 9px 7px; }
+.tbl.rates th { padding-right: 4px; }
+.tbl.rates thead th { padding: 9px 7px; }

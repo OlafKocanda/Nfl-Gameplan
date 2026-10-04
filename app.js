@@ -60,6 +60,7 @@ const S = {
   mine: new Map(),    // id -> "away" | "home"
   tipped: new Set(),  // "<id>_<spieler>"
   theirs: new Map(),  // id -> Tipp des anderen, erst nach Anpfiff
+  at: new Map(),      // "<id>_<spieler>" -> Zeitpunkt des Tipps (für die Statistik)
   sync: { at: null, ok: null },
   note: {},           // id -> Hinweis an einer Spielzeile
   wp: new Map(),      // id -> {home, away, live, at}  Siegchance von ESPN
@@ -161,7 +162,7 @@ onAuthStateChanged(auth, async user => {
   clearTimeout(syncTimer);
   syncTimer = null;
   Object.assign(S, { user, me: null, games: new Map(), mine: new Map(), tipped: new Set(),
-    theirs: new Map(), sync: { at: null, ok: null }, note: {} });
+    theirs: new Map(), at: new Map(), sync: { at: null, ok: null }, note: {} });
   if (!user) return renderLogin();
   wrap.innerHTML = `<p class="meta pad">Lade …</p>`;
   unsub.push(onSnapshot(doc(db, "meta", "players"), snap => {
@@ -219,7 +220,11 @@ async function start() {
   }, err => fail(err)));
 
   unsub.push(onSnapshot(query(collection(db, "picks"), where("uid", "==", S.user.uid)), snap => {
-    snap.docChanges().forEach(ch => S.mine.set(+ch.doc.data().game, ch.doc.data().choice));
+    snap.docChanges().forEach(ch => {
+      const d = ch.doc.data({ serverTimestamps: "estimate" });
+      S.mine.set(+d.game, d.choice);
+      if (d.at) S.at.set(`${d.game}_${S.me}`, d.at.toDate());
+    });
     render();
   }, err => fail(err)));
 
@@ -260,7 +265,9 @@ function loadCache() {
   try { return JSON.parse(localStorage.getItem(cacheKey()) || "{}"); } catch { return {}; }
 }
 function saveCache() {
-  const keep = [...S.theirs].filter(([id]) => !isBackfill(S.games.get(id) || {}));
+  const o = other();
+  const keep = [...S.theirs].filter(([id]) => !isBackfill(S.games.get(id) || {}))
+    .map(([id, c]) => [id, [c, S.at.get(`${id}_${o}`)?.getTime() || 0]]);
   try { localStorage.setItem(cacheKey(), JSON.stringify(Object.fromEntries(keep))); } catch {}
 }
 let revealing = null, revealAgain = false;
@@ -269,7 +276,10 @@ async function reveal() {
   revealing = (async () => {
     if (!S.theirs.size) {
       for (const [k, v] of Object.entries(loadCache())) {
-        if (!isBackfill(S.games.get(+k) || {})) S.theirs.set(+k, v);
+        if (isBackfill(S.games.get(+k) || {})) continue;
+        if (!Array.isArray(v) || !v[1]) continue;           // alte Einträge ohne Zeitpunkt neu holen
+        S.theirs.set(+k, v[0]);
+        S.at.set(`${k}_${other()}`, new Date(v[1]));
       }
     }
     const o = other();
@@ -280,7 +290,11 @@ async function reveal() {
       await Promise.all(todo.slice(i, i + 20).map(async g => {
         try {
           const snap = await getDoc(doc(db, "picks", `${g.id}_${o}`));
-          if (snap.exists()) { S.theirs.set(g.id, snap.data().choice); got = true; }
+          if (snap.exists()) {
+            S.theirs.set(g.id, snap.data().choice);
+            if (snap.data().at) S.at.set(`${g.id}_${o}`, snap.data().at.toDate());
+            got = true;
+          }
         } catch { /* noch nicht freigegeben */ }
       }));
     }
@@ -1191,13 +1205,37 @@ function renderIntro() {
 }
 
 // ---------------------------------------------------------------- Statistik
+const DIVISIONS = {
+  "AFC East": ["BUF", "MIA", "NE", "NYJ"], "AFC North": ["BAL", "CIN", "CLE", "PIT"],
+  "AFC South": ["HOU", "IND", "JAX", "TEN"], "AFC West": ["DEN", "KC", "LV", "LAC"],
+  "NFC East": ["DAL", "NYG", "PHI", "WAS"], "NFC North": ["CHI", "DET", "GB", "MIN"],
+  "NFC South": ["ATL", "CAR", "NO", "TB"], "NFC West": ["ARI", "LAR", "SF", "SEA"],
+};
+const DIV_OF = Object.fromEntries(Object.entries(DIVISIONS).flatMap(([d, ts]) => ts.map(t => [t, d])));
+
+// Sendeplatz nach deutscher Zeit
+function slotOf(g) {
+  if (!g.kickoff) return null;
+  const b = berlin(g.kickoff), h = +b.time.slice(0, 2);
+  if (b.wd === "Do" || b.wd === "Fr") return "thu";
+  if (b.wd === "Sa") return "sat";
+  if (b.wd === "So") return h < 17 ? "intl" : h < 21 ? "early" : "late";
+  if (b.wd === "Mo") return h < 8 ? "snf" : "other";
+  if (b.wd === "Di") return "mnf";
+  return "other";
+}
+
 function renderStats() {
   const sc = scores();
   const es = espnStats();
-  const choiceOf = (p, id) => (p === S.me ? S.mine : S.theirs).get(id);
+  const P = ["anni", "olaf"];
+  const choiceOf = (p, id) => (p === "espn" ? espnPick(S.games.get(id)) : (p === S.me ? S.mine : S.theirs).get(id));
+  const hit = (p, g) => !!g.winner && g.winner !== "tie" && choiceOf(p, g.id) === g.winner;
   const finished = [...S.games.values()].filter(g => g.winner).sort((a, b) => a.kickoff - b.kickoff || a.id - b.id);
+  const pc = (a, b) => (b ? `${Math.round(a / b * 100)} %` : "–");
+  const weekName = w => (w <= 18 ? `Woche ${w}` : (WEEKS.find(([k]) => k === w) || [, ""])[1]);
 
-  // Punkteverlauf: kumuliert über die Wochen mit Ergebnissen
+  // Punkteverlauf
   const weeks = WEEKS.map(([w]) => w).filter(w => finished.some(g => g.week === w));
   const series = [
     { key: "anni", name: "Anni", cls: "anni", per: sc.perWeek.anni },
@@ -1205,7 +1243,143 @@ function renderStats() {
     { key: "espn", name: "ESPN", cls: "espn", per: es.perWeek },
   ].map(s => { let sum = 0; return { ...s, pts: weeks.map(w => (sum += s.per[w] || 0)) }; });
 
-  // Kennzahlen je Spieler
+  // Trefferquoten-Tabelle für beliebige Spielgruppen
+  const rate = (p, test) => {
+    let ok = 0, n = 0;
+    for (const g of finished) {
+      if (!test(g) || !choiceOf(p, g.id)) continue;
+      n++;
+      if (hit(p, g)) ok++;
+    }
+    return [ok, n];
+  };
+  const cell = ([ok, n]) => (n ? `${Math.round(ok / n * 100)} %<small>${ok}/${n}</small>` : `<span class="muted">–</span>`);
+  const rateTable = (rows, espn = true) => `
+    <table class="tbl duo rates">
+      <thead><tr><th></th><th>Anni</th><th>Olaf</th>${espn ? `<th class="espn">ESPN</th>` : ""}</tr></thead>
+      <tbody>${rows.map(r => `<tr><th>${r.label}${r.sub ? `<small>${r.sub}</small>` : ""}</th>
+        <td>${cell(rate("anni", r.test))}</td><td>${cell(rate("olaf", r.test))}</td>
+        ${espn ? `<td class="espn">${cell(rate("espn", r.test))}</td>` : ""}</tr>`).join("")}</tbody>
+    </table>`;
+
+  // --- Duell
+  const duels = finished.filter(g => choiceOf("anni", g.id) && choiceOf("olaf", g.id)
+    && choiceOf("anni", g.id) !== choiceOf("olaf", g.id));
+  const duelA = duels.filter(g => hit("anni", g)).length, duelO = duels.filter(g => hit("olaf", g)).length;
+  const both = finished.filter(g => choiceOf("anni", g.id) && choiceOf("olaf", g.id));
+  const same = both.length - duels.length;
+
+  const streaks = p => {
+    let cur = 0, best = 0, run = 0;
+    for (const g of finished) {
+      if (!choiceOf(p, g.id)) continue;
+      run = hit(p, g) ? run + 1 : 0;
+      best = Math.max(best, run);
+    }
+    cur = run;
+    return { cur, best };
+  };
+  const done = WEEKS.map(([w]) => w).filter(w => weekResult(w, sc).done);
+  const weekStreak = p => {
+    let run = 0, best = 0;
+    for (const w of done) {
+      const r = weekResult(w, sc);
+      const won = p === "anni" ? r.a > r.o : r.o > r.a;
+      run = won ? run + 1 : 0;
+      best = Math.max(best, run);
+    }
+    return { cur: run, best };
+  };
+  const st = Object.fromEntries(P.map(p => [p, streaks(p)]));
+  const ws = Object.fromEntries(P.map(p => [p, weekStreak(p)]));
+  const fire = n => (n >= 5 ? " 🔥" : "");
+
+  // Aufholpotenzial
+  const cur = currentWeek();
+  const rc = weekResult(cur, sc);
+  const left = [...S.games.values()].filter(g => g.week === cur && g.away && g.home && !g.winner).length;
+  const totA = sc.reg.anni + sc.po.anni, totO = sc.reg.olaf + sc.po.olaf;
+  const lead = totA === totO ? null : totA > totO ? "anni" : "olaf";
+  const trail = lead && (lead === "anni" ? "olaf" : "anni");
+  const wLead = rc.a === rc.o ? null : rc.a > rc.o ? "anni" : "olaf";
+  const wTrail = wLead && (wLead === "anni" ? "olaf" : "anni");
+  const gapW = Math.abs(rc.a - rc.o);
+  const potential = !left ? `${weekName(cur)} ist durch.`
+    : !wLead ? `${weekName(cur)} steht ${rc.a}:${rc.o}, noch ${left} ${left === 1 ? "Spiel" : "Spiele"} offen – alles drin.`
+    : left >= gapW ? `${weekName(cur)}: ${PLAYERS[wLead]} führt ${Math.max(rc.a, rc.o)}:${Math.min(rc.a, rc.o)},
+        noch ${left} ${left === 1 ? "Spiel" : "Spiele"} offen – ${PLAYERS[wTrail]} kann die Woche noch drehen.`
+    : `${weekName(cur)}: ${PLAYERS[wLead]} führt uneinholbar ${Math.max(rc.a, rc.o)}:${Math.min(rc.a, rc.o)}.`;
+  const overall = lead ? `Gesamt führt ${PLAYERS[lead]} mit ${Math.abs(totA - totO)} ${Math.abs(totA - totO) === 1 ? "Punkt" : "Punkten"}.
+      ${trail && left ? `Holt ${PLAYERS[trail]} alle ${left} offenen Spiele und ${PLAYERS[lead]} keins, sind es
+      ${Math.abs(totA - totO) - left > 0 ? `noch ${Math.abs(totA - totO) - left}` : Math.abs(totA - totO) === left ? "Gleichstand" : `${left - Math.abs(totA - totO)} für ${PLAYERS[trail]}`}.` : ""}`
+    : "Gesamt steht es unentschieden.";
+
+  // --- Rekorde
+  const records = p => {
+    let best = null, worst = null, perfect = 0;
+    for (const w of done) {
+      const r = weekResult(w, sc), v = p === "anni" ? r.a : r.o;
+      if (!best || v > best.v) best = { w, v, t: r.total };
+      if (!worst || v < worst.v) worst = { w, v, t: r.total };
+      if (v === r.total) perfect++;
+    }
+    return { best, worst, perfect };
+  };
+  const rec = Object.fromEntries(P.map(p => [p, records(p)]));
+  const wk = x => (x ? `${x.v}<small>von ${x.t} · ${weekName(x.w)}</small>` : `<span class="muted">–</span>`);
+
+  // --- Mut: Treffer mit der kleinsten Siegchance
+  const bravest = p => {
+    let pick = null;
+    for (const g of finished) {
+      if (!hit(p, g) || g.pre_wp == null) continue;
+      const c = choiceOf(p, g.id), prob = c === "home" ? g.pre_wp : 100 - g.pre_wp;
+      if (!pick || prob < pick.prob) pick = { g, c, prob };
+    }
+    return pick;
+  };
+  const brave = x => {
+    if (!x) return `<span class="muted">noch kein Außenseiter-Treffer</span>`;
+    const opp = x.c === "home" ? x.g.away : x.g.home;
+    return `<span class="bravet">${logo(x.g[x.c])}<b>${esc(x.g[x.c])}</b></span>
+      <span class="bravep">bei ${Math.round(x.prob)} %</span><small>gegen ${esc(opp)} · ${weekName(x.g.week)}</small>`;
+  };
+
+  // --- Früh- oder Spättipper (Tipps nach Anpfiff, z. B. Papiertipps, zählen nicht)
+  const lead_h = (p, g) => {
+    const at = S.at.get(`${g.id}_${p}`);
+    return at && g.kickoff && at < g.kickoff ? (g.kickoff - at) / 3600e3 : null;
+  };
+  const median = xs => { const v = [...xs].sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : null; };
+  const fmtLead = h => (h == null ? "–" : h < 1 ? `${Math.round(h * 60)} Min.` : h < 48 ? `${Math.round(h)} Std.` : `${Math.round(h / 24)} Tage`);
+  const medLead = p => fmtLead(median(finished.map(g => lead_h(p, g)).filter(x => x != null)));
+  const leadRow = (label, lo, hi) => ({ label, test: null, lo, hi });
+  const leadRows = [leadRow("Kurz vor Anpfiff", 0, 2), leadRow("Am Spieltag", 2, 24), leadRow("Früher", 24, 1e9)];
+  const leadCell = (p, lo, hi) => {
+    let ok = 0, n = 0;
+    for (const g of finished) {
+      const h = lead_h(p, g);
+      if (h == null || h < lo || h >= hi) continue;
+      n++;
+      if (hit(p, g)) ok++;
+    }
+    return cell([ok, n]);
+  };
+
+  // --- Team-Kacheln: Trefferquote in allen Spielen eines Teams
+  const teamRate = (p, t) => rate(p, g => g.away === t || g.home === t);
+  const bar = (p, t) => {
+    const [ok, n] = teamRate(p, t);
+    const v = n ? Math.round(ok / n * 100) : null;
+    return `<div class="tb ${p}"><span class="tbl-l">${PLAYERS[p][0]}</span><span class="tbar"><i style="width:${v ?? 0}%"></i></span>
+      <span class="tbv">${v == null ? "–" : `${v}%`}</span></div>`;
+  };
+  const tiles = Object.entries(DIVISIONS).map(([d, ts]) => `
+    <div class="divrow"><span class="divname">${d}</span>
+      <div class="ttiles">${ts.map(t => `<div class="ttile">${logo(t)}<b>${t}</b>${bar("anni", t)}${bar("olaf", t)}</div>`).join("")}</div>
+    </div>`).join("");
+
+  // --- bestehende Kennzahlen
   const per = p => {
     const mine = finished.filter(g => choiceOf(p, g.id));
     const fav = mine.filter(g => espnPick(g));
@@ -1224,14 +1398,16 @@ function renderStats() {
     const rated = list.filter(x => x.n >= 3);
     const best = [...rated].sort((a, b) => b.ok / b.n - a.ok / a.n || b.n - a.n)[0];
     const worst = [...rated].sort((a, b) => a.ok / a.n - b.ok / b.n || b.n - a.n)[0];
-    return { n: mine.length, fav: [favPicked.length, fav.length], upset: upset.length,
+    return { fav: [favPicked.length, fav.length], upset: upset.length,
              home: [home.length, mine.length], often, best, worst };
   };
   const A = per("anni"), O = per("olaf");
-  const both = finished.filter(g => choiceOf("anni", g.id) && choiceOf("olaf", g.id));
-  const same = both.filter(g => choiceOf("anni", g.id) === choiceOf("olaf", g.id)).length;
-  const pc = (a, b) => (b ? `${Math.round(a / b * 100)} %` : "–");
   const team = x => x ? `${logo(x.t)}<span>${esc(x.t)}</span><small>${x.ok}/${x.n}</small>` : `<span class="muted">–</span>`;
+  const favP = g => (g.pre_wp == null ? null : Math.max(g.pre_wp, 100 - g.pre_wp));
+  const margin = g => (g.away_score == null ? null : Math.abs(g.away_score - g.home_score));
+  const div = g => (DIV_OF[g.away] && DIV_OF[g.home] ? (DIV_OF[g.away] === DIV_OF[g.home] ? "div"
+    : DIV_OF[g.away].slice(0, 3) === DIV_OF[g.home].slice(0, 3) ? "conf" : "inter") : null);
+  const name = p => `<span class="pn ${p}">${PLAYERS[p]}</span>`;
 
   document.title = "Statistik - Tippspiel";
   paint(nav(null) + `
@@ -1239,14 +1415,51 @@ function renderStats() {
       <h2>Punkteverlauf<span class="wsub">richtige Tipps, aufsummiert</span></h2>
       ${weeks.length ? `<div class="chart" id="chart" data-keep></div>` : `<p class="meta bfintro">Sobald Ergebnisse da sind, erscheint hier der Verlauf.</p>`}
     </section>
+
     <section class="week">
-      <h2>Kennzahlen</h2>
+      <h2>Duell<span class="wsub">nur Anni gegen Olaf</span></h2>
+      <div class="banner live potential">${potential}<br><span class="muted">${overall}</span></div>
       <div class="tiles">
-        <div class="tile"><span class="tl">Gleich getippt</span><span class="tv">${pc(same, both.length)}</span>
-          <span class="ts">${same} von ${both.length} Spielen</span></div>
-        <div class="tile"><span class="tl">ESPN-Treffer</span><span class="tv">${pc(...es.hit)}</span>
-          <span class="ts">Favorit gewinnt</span></div>
+        <div class="tile"><span class="tl">Direkte Duelle</span>
+          <span class="tv"><span class="anni">${duelA}</span><span class="muted">:</span><span class="olaf">${duelO}</span></span>
+          <span class="ts">${duels.length} Spiele unterschiedlich getippt, ${same} gleich</span></div>
+        <div class="tile"><span class="tl">Wochensieg-Serie</span>
+          <span class="tv"><span class="anni">${ws.anni.cur}</span><span class="muted">:</span><span class="olaf">${ws.olaf.cur}</span></span>
+          <span class="ts">aktuell · Rekord ${ws.anni.best}:${ws.olaf.best}</span></div>
       </div>
+      <table class="tbl duo">
+        <thead><tr><th></th><th>Anni</th><th>Olaf</th></tr></thead>
+        <tbody>
+          <tr><th>Aktuelle Serie<small>richtige Tipps in Folge</small></th>
+            <td>${st.anni.cur}${fire(st.anni.cur)}</td><td>${st.olaf.cur}${fire(st.olaf.cur)}</td></tr>
+          <tr><th>Längste Serie</th><td>${st.anni.best}</td><td>${st.olaf.best}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="week">
+      <h2>Rekorde<span class="wsub">abgeschlossene Wochen</span></h2>
+      <table class="tbl duo">
+        <thead><tr><th></th><th>Anni</th><th>Olaf</th></tr></thead>
+        <tbody>
+          <tr><th>Beste Woche</th><td>${wk(rec.anni.best)}</td><td>${wk(rec.olaf.best)}</td></tr>
+          <tr><th>Schlechteste Woche</th><td>${wk(rec.anni.worst)}</td><td>${wk(rec.olaf.worst)}</td></tr>
+          <tr><th>Perfekte Wochen<small>alle Spiele richtig</small></th><td>${rec.anni.perfect}</td><td>${rec.olaf.perfect}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="week">
+      <h2>Mut &amp; Riecher</h2>
+      <div class="tiles">
+        ${P.map(p => `<div class="tile brave"><span class="tl">Mutigster Treffer · ${name(p)}</span>${brave(bravest(p))}</div>`).join("")}
+      </div>
+      <h3 class="subh">Nach Favoritenstärke<span class="wsub">laut ESPN zum Anpfiff</span></h3>
+      ${rateTable([
+        { label: "Klarer Favorit", sub: "Siegchance ab 70 %", test: g => favP(g) >= 70 },
+        { label: "Favorit", sub: "60 bis 70 %", test: g => favP(g) >= 60 && favP(g) < 70 },
+        { label: "Enges Spiel", sub: "unter 60 %", test: g => favP(g) != null && favP(g) < 60 },
+      ])}
       <table class="tbl duo">
         <thead><tr><th></th><th>Anni</th><th>Olaf</th></tr></thead>
         <tbody>
@@ -1256,6 +1469,43 @@ function renderStats() {
         </tbody>
       </table>
     </section>
+
+    <section class="week">
+      <h2>Wann ihr richtig liegt</h2>
+      <h3 class="subh">Nach Anstoßzeit<span class="wsub">deutsche Zeit</span></h3>
+      ${rateTable([
+        { label: "Donnerstag", sub: "Thursday Night", test: g => slotOf(g) === "thu" },
+        { label: "Sonntag früh", sub: "Spiele in Europa, 14–16 Uhr", test: g => slotOf(g) === "intl" },
+        { label: "Sonntag 19 Uhr", test: g => slotOf(g) === "early" },
+        { label: "Sonntag 22 Uhr", test: g => slotOf(g) === "late" },
+        { label: "Sunday Night", sub: "Nacht auf Montag", test: g => slotOf(g) === "snf" },
+        { label: "Monday Night", sub: "Nacht auf Dienstag", test: g => slotOf(g) === "mnf" },
+        { label: "Sonstige", sub: "Samstag, Feiertage", test: g => ["sat", "other"].includes(slotOf(g)) },
+      ].filter(r => finished.some(r.test)))}
+      <h3 class="subh">Früh- oder Spättipper<span class="wsub">wie lange vor Anpfiff getippt</span></h3>
+      <table class="tbl duo rates">
+        <thead><tr><th></th><th>Anni</th><th>Olaf</th></tr></thead>
+        <tbody>
+          <tr><th>Typischer Vorlauf<small>Median</small></th><td>${medLead("anni")}</td><td>${medLead("olaf")}</td></tr>
+          ${leadRows.map(r => `<tr><th>${r.label}<small>${r.hi === 2 ? "unter 2 Std." : r.hi === 24 ? "2 bis 24 Std." : "mehr als 1 Tag"}</small></th>
+            <td>${leadCell("anni", r.lo, r.hi)}</td><td>${leadCell("olaf", r.lo, r.hi)}</td></tr>`).join("")}
+        </tbody>
+      </table>
+      <p class="meta bfintro">Papiertipps zählen hier nicht, ihr Zeitpunkt liegt nach dem Anpfiff.</p>
+      <h3 class="subh">Knappe Spiele oder Kantersiege<span class="wsub">Punkteabstand am Ende</span></h3>
+      ${rateTable([
+        { label: "Knapp", sub: "bis 7 Punkte", test: g => margin(g) != null && margin(g) <= 7 },
+        { label: "Deutlich", sub: "8 bis 16 Punkte", test: g => margin(g) >= 8 && margin(g) <= 16 },
+        { label: "Kantersieg", sub: "ab 17 Punkte", test: g => margin(g) >= 17 },
+      ])}
+      <h3 class="subh">Nach Spielart</h3>
+      ${rateTable([
+        { label: "Divisionsduell", sub: "gelten als schwer vorherzusagen", test: g => div(g) === "div" },
+        { label: "Gleiche Conference", test: g => div(g) === "conf" },
+        { label: "AFC gegen NFC", test: g => div(g) === "inter" },
+      ])}
+    </section>
+
     <section class="week">
       <h2>Teams<span class="wsub">ab 3 Tipps auf ein Team</span></h2>
       <table class="tbl duo teams">
@@ -1266,6 +1516,8 @@ function renderStats() {
           <tr><th>Größter Reinfall</th><td>${team(A.worst)}</td><td>${team(O.worst)}</td></tr>
         </tbody>
       </table>
+      <h3 class="subh">Alle Teams<span class="wsub">Trefferquote in den Spielen des Teams</span></h3>
+      <div class="teamgrid">${tiles}</div>
       ${footer()}
     </section>`);
   if (weeks.length) drawChart(document.getElementById("chart"), weeks, series);

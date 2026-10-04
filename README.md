@@ -30,8 +30,11 @@ die Ergebnisse kommen live von ESPN. Kostenlos, kein eigener Server.
   deinen Tipp beginnen. Über *Kalender-Erinnerung* lädt man eine Kalenderdatei
   mit einer Erinnerung pro Woche (2 Stunden vor dem ersten Spiel und vor den
   Sonntagsspielen). Die Zeiten sind die zum Zeitpunkt des Herunterladens
-- **Statistik:** Punkteverlauf (Anni, Olaf, ESPN), wie oft ihr gleich getippt
-  habt, Favorit oder Außenseiter, Heimteams, Lieblings- und Problemteams
+- **Statistik:** Punkteverlauf (Anni, Olaf, ESPN); Duell mit direkten
+  Duellen, Serien, Wochensieg-Serie und Aufholpotenzial; Rekorde; mutigster
+  Treffer; Trefferquote nach Favoritenstärke, Anstoßzeit, Vorlauf des Tipps,
+  Punkteabstand und Spielart (Division, Conference, AFC/NFC); Lieblings- und
+  Problemteams und alle 32 Teams als Kacheln
 - Fällt ESPN aus, kann man Sieger, Zeit und Paarung per Hand eintragen
 - **Papiertipps:** Die Tipps für die Spiele vor dem Start der App (Wochen
   1–3 und das Donnerstagsspiel der Woche 4) lassen sich bis einschließlich
