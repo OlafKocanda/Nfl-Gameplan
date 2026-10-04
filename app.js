@@ -65,6 +65,7 @@ const S = {
   note: {},           // id -> Hinweis an einer Spielzeile
   wp: new Map(),      // id -> {home, away, live, at}  Siegchance von ESPN
   showWp: (() => { try { return localStorage.getItem("tippspiel:wp") === "1"; } catch { return false; } })(),
+  filter: (() => { try { return localStorage.getItem("tippspiel:filter") || "all"; } catch { return "all"; } })(),
 };
 const unsub = [];
 const other = () => (S.me === "anni" ? "olaf" : "anni");
@@ -744,7 +745,7 @@ async function hardRefresh() {
   refreshing = true;
   S.syncBusy = true;
   render();
-  const keep = new Set(["tippspiel:intro", "tippspiel:wp"]);
+  const keep = new Set(["tippspiel:intro", "tippspiel:wp", "tippspiel:filter"]);
   try {
     for (const k of Object.keys(localStorage)) if (k.startsWith("tippspiel:") && !keep.has(k)) localStorage.removeItem(k);
   } catch {}
@@ -887,6 +888,11 @@ document.addEventListener("click", e => {
   else if (act === "intro-done") {
     try { localStorage.setItem("tippspiel:intro", "1"); } catch {}
     if (location.hash === "#hilfe") location.hash = ""; else render();
+  }
+  else if (act === "filter") {
+    S.filter = b.dataset.filter;
+    try { localStorage.setItem("tippspiel:filter", S.filter); } catch {}
+    render();
   }
   else if (act === "wp") {
     S.showWp = !S.showWp;
@@ -1064,6 +1070,18 @@ function render() {
   });
 }
 
+// Filter für die Spielwoche. Der fremde Tipp ist erst nach Anpfiff bekannt,
+// "unterschiedlich"/"gleich" gelten deshalb nur für angepfiffene Spiele.
+const FILTERS = [
+  ["all", "Alle", () => true],
+  ["todo", "Ohne Tipp", g => !started(g) && !S.mine.has(g.id)],
+  ["open", "Offen", g => !started(g)],
+  ["live", "Läuft", g => started(g) && !g.winner],
+  ["done", "Beendet", g => !!g.winner],
+  ["diff", "Unterschiedlich", g => S.mine.has(g.id) && S.theirs.has(g.id) && S.mine.get(g.id) !== S.theirs.get(g.id)],
+  ["same", "Gleich", g => S.mine.has(g.id) && S.theirs.has(g.id) && S.mine.get(g.id) === S.theirs.get(g.id)],
+];
+
 function renderWeek(n) {
   const games = [...S.games.values()].filter(g => g.week === n).sort((a, b) =>
     (a.kickoff ? 0 : 1) - (b.kickoff ? 0 : 1) || (a.kickoff || 0) - (b.kickoff || 0) || a.id - b.id);
@@ -1072,9 +1090,18 @@ function renderWeek(n) {
     return;
   }
   const sc = scores();
+  const playableAll = games.filter(g => g.away && g.home);
+  const fdef = FILTERS.find(f => f[0] === S.filter) || FILTERS[0];
+  const shown = fdef[0] === "all" ? games : playableAll.filter(fdef[2]);
+  const chips = FILTERS.map(([key, label, test]) => {
+    const count = key === "all" ? playableAll.length : playableAll.filter(test).length;
+    if (key !== "all" && key !== fdef[0] && !count) return "";
+    return `<button class="fchip${key === fdef[0] ? " on" : ""}" data-act="filter" data-filter="${key}"
+      aria-pressed="${key === fdef[0]}">${label}<span>${count}</span></button>`;
+  }).join("");
   const rows = [];
   let lastDay = null;
-  for (const g of games) {
+  for (const g of shown) {
     const b = g.kickoff ? berlin(g.kickoff) : null;
     const head = b ? `${b.wd} ${b.day}` : fmtHint(g.date_hint);
     if (head !== lastDay) { rows.push(`<li class="dayhead">${head}</li>`); lastDay = head; }
@@ -1112,7 +1139,9 @@ function renderWeek(n) {
         <button class="toggle${S.showWp ? " on" : ""}" data-act="wp" aria-pressed="${S.showWp}">
           ${S.showWp ? "✓ " : ""}Siegchance</button>
       </div>
-      <ul class="games">${rows.join("")}</ul>
+      <div class="filters" role="group" aria-label="Spiele filtern">${chips}</div>
+      <ul class="games">${rows.join("") || `<li class="nofilter">Keine Spiele für „${fdef[1]}“.
+        <button class="linkbtn" data-act="filter" data-filter="all">Alle zeigen</button></li>`}</ul>
       ${S.showWp ? `<p class="meta wpnote">Siegchance laut ESPN: vor dem Spiel die Prognose,
         während des Spiels live.</p>` : ""}
       ${footer()}
