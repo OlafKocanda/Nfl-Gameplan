@@ -599,22 +599,25 @@ async function ensureWp(week) {
 // Wahrscheinlichkeit, dass Anni bzw. Olaf die Woche gewinnt. Pro Spiel zählt
 // nur, ob die Tipps verschieden sind und wer davon richtig liegt; daraus
 // ergibt sich die Verteilung der Punktdifferenz (exakt, per Faltung).
-// Fremde Tipps vor Anpfiff kennt die App nicht: dann wird angenommen, der
-// andere tippt nach ESPN-Wahrscheinlichkeit. So verrät die Grafik nichts.
+// Spiele vor Anpfiff zählen für beide gleich (beide Tipps unbekannt, auch der
+// eigene): so steht vor der Woche 50:50, nichts Geheimes fließt ein und beide
+// Geräte zeigen dasselbe. Erst mit Anpfiff zählen die echten Tipps.
 const preProb = g => g.pre_wp ?? S.wp.get(g.id)?.pre ?? 50;
-function pickDist(p, g, q) {
+function pickDist(p, g, q, actual) {
+  if (!actual) return { home: q, away: 1 - q };
   const c = p === S.me ? S.mine.get(g.id) : S.theirs.get(g.id);
   if (c) return { [c]: 1 };
-  const hidden = p !== S.me && S.tipped.has(`${g.id}_${p}`);   // getippt, aber (noch) nicht sichtbar
-  if (started(g) && !hidden) return {};                          // kein Tipp mehr möglich
+  const hidden = p !== S.me && S.tipped.has(`${g.id}_${p}`);   // getippt, aber noch nicht geladen
+  if (!hidden) return {};                                        // kein Tipp
   return { home: q, away: 1 - q };
 }
-function weekOdds(games, probOf, resultOf) {
+function weekOdds(games, probOf, resultOf, actualOf = g => started(g)) {
   let dist = new Map([[0, 1]]);
   for (const g of games) {
     if (!g.away || !g.home) continue;
     const res = resultOf(g), q = Math.min(1, Math.max(0, probOf(g) / 100));
-    const pa = pickDist("anni", g, q), po = pickDist("olaf", g, q);
+    const act = actualOf(g);
+    const pa = pickDist("anni", g, q, act), po = pickDist("olaf", g, q, act);
     const step = { 1: 0, 0: 0, [-1]: 0 };
     for (const [w, pw] of res ? [[res, 1]] : [["home", q], ["away", 1 - q]]) {
       const sa = w === "tie" ? 0 : pa[w] || 0, so = w === "tie" ? 0 : po[w] || 0;
@@ -630,24 +633,26 @@ function weekOdds(games, probOf, resultOf) {
   }
   let a = 0, o = 0, t = 0;
   for (const [d, pd] of dist) d > 0 ? (a += pd) : d < 0 ? (o += pd) : (t += pd);
-  return { a: a * 100, o: o * 100, t: t * 100 };
+  // Remis je zur Hälfte, damit Anni + Olaf immer 100 % ergeben
+  return { a: (a + t / 2) * 100, o: (o + t / 2) * 100, t: t * 100 };
 }
 // Verlauf: vor der Woche, nach jedem beendeten Spiel, live
 function weekOddsSteps(week) {
   const games = [...S.games.values()].filter(g => g.week === week && g.away && g.home)
     .sort((a, b) => (a.kickoff || 0) - (b.kickoff || 0) || a.id - b.id);
   const done = games.filter(g => g.winner);
-  const steps = [{ label: "Vor der Woche", ...weekOdds(games, preProb, () => null) }];
+  // Historische Punkte: nur die bis dahin beendeten Spiele zählen mit echten Tipps
+  const steps = [{ label: "Vor der Woche", ...weekOdds(games, preProb, () => null, () => false) }];
   done.forEach((g, i) => {
     const fixed = new Set(done.slice(0, i + 1).map(x => x.id));
     const win = g.winner === "tie" ? "Unentschieden" : g[g.winner];
     steps.push({ label: `nach ${g.away} @ ${g.home}`, sub: `Sieger ${win}`,
-      ...weekOdds(games, preProb, x => (fixed.has(x.id) ? x.winner : null)) });
+      ...weekOdds(games, preProb, x => (fixed.has(x.id) ? x.winner : null), x => fixed.has(x.id)) });
   });
-  const running = games.filter(g => !g.winner && g.status === "in");
+  const running = games.filter(g => !g.winner && started(g));
   if (running.length) {
     steps.push({ label: "Jetzt (live)", sub: `${running.length} ${running.length === 1 ? "Spiel läuft" : "Spiele laufen"}`, live: true,
-      ...weekOdds(games, g => (g.status === "in" && S.wp.get(g.id)?.live ? S.wp.get(g.id).home : preProb(g)), x => x.winner || null) });
+      ...weekOdds(games, g => (S.wp.get(g.id)?.live ? S.wp.get(g.id).home : preProb(g)), x => x.winner || null) });
   }
   return { steps, games, done: games.length > 0 && done.length === games.length };
 }
@@ -662,20 +667,22 @@ function oddsCard(week) {
   let head;
   if (done) {
     const w = now.a > 50 ? "anni" : now.o > 50 ? "olaf" : null;
-    head = `<p class="oddsres">${w ? `<strong class="${w}">${PLAYERS[w]}</strong> hat die Woche gewonnen. Vor der Woche
-      lag die Chance bei <strong>${pct(w === "anni" ? first.a : first.o)}</strong>.`
-      : `Unentschieden. Vor der Woche lag die Chance dafür bei <strong>${pct(first.t)}</strong>.`}</p>`;
+    // Auswertung: wie knapp war es? Tiefster Stand des Siegers im Verlauf
+    const low = w ? steps.reduce((m, st, i) => (st[w === "anni" ? "a" : "o"] < m.v ? { v: st[w === "anni" ? "a" : "o"], i } : m), { v: 101, i: 0 }) : null;
+    head = `<p class="oddsres">${w ? `<strong class="${w}">${PLAYERS[w]}</strong> hat die Woche gewonnen.
+      ${low && low.v < 50 ? `Zwischendurch lag die Chance nur bei <strong>${pct(low.v)}</strong> (${esc(steps[low.i].label)}).`
+        : "Die Chance lag nie unter 50 %."}` : "Die Woche endet unentschieden."}</p>`;
   } else {
-    head = `<span class="oddsnum"><span class="anni">Anni ${pct(now.a)}</span>
-      <span class="olaf">Olaf ${pct(now.o)}</span><span class="muted">Remis ${pct(now.t)}</span></span>`;
+    head = `<span class="oddsnum"><span class="anni">Anni ${pct(now.a)}</span><span class="olaf">Olaf ${pct(now.o)}</span></span>
+      ${!games.some(started) ? `<span class="muted oddssub">Noch kein Spiel angepfiffen – ab dem ersten Anpfiff geht's los.</span>`
+        : now.t >= 1 ? `<span class="muted oddssub">darin Remis-Chance ${pct(now.t)}, je zur Hälfte verteilt</span>` : ""}`;
   }
   return `<div class="odds">
     <div class="oddshead"><span class="tl">Siegchance der Woche${now.live ? ` <i class="livedot"></i>live` : ""}</span>${head}</div>
-    <div class="oddsbar" role="img" aria-label="Anni ${pct(now.a)}, Remis ${pct(now.t)}, Olaf ${pct(now.o)}">
-      <i class="anni" style="width:${now.a}%"></i><i class="tie" style="width:${now.t}%"></i><i class="olaf" style="width:${now.o}%"></i></div>
+    <div class="oddsbar" role="img" aria-label="Anni ${pct(now.a)}, Olaf ${pct(now.o)}">
+      <i class="anni" style="width:${now.a}%"></i><i class="olaf" style="width:${now.o}%"></i></div>
     ${steps.length > 1 ? `<div class="chart oddschart" id="oddschart" data-keep></div>` : ""}
-    <p class="meta oddsnote">Aus ESPN-Siegchancen und euren Tipps.
-      ${games.some(g => !started(g)) ? `Tipps von ${PLAYERS[other()]} für noch nicht angepfiffene Spiele bleiben geheim und werden geschätzt.` : ""}</p>
+    <p class="meta oddsnote">Aus ESPN-Siegchancen und euren Tipps. Spiele zählen ab ihrem Anpfiff.</p>
   </div>`;
 }
 
@@ -716,7 +723,7 @@ function drawOdds(el, steps) {
     tip.innerHTML = `<b>${esc(st.label)}</b>${st.sub ? `<small class="tsub">${esc(st.sub)}</small>` : ""}
       <span class="tr"><i class="anni"></i>Anni<em>${Math.round(st.a)} %</em></span>
       <span class="tr"><i class="olaf"></i>Olaf<em>${Math.round(st.o)} %</em></span>
-      <span class="tr"><i></i>Remis<em>${Math.round(st.t)} %</em></span>`;
+      ${st.t >= 1 ? `<small class="tsub">darin Remis ${Math.round(st.t)} %</small>` : ""}`;
     tip.hidden = false;
     tip.style.left = `${Math.min(Math.max(x(i) - tip.offsetWidth / 2, 0), W - tip.offsetWidth)}px`;
   };

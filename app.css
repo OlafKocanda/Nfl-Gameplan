@@ -685,3 +685,4 @@ button.whobtn { flex: 1; padding: 0; background: none; border: 0; min-height: 0;
 .oddsbar i.olaf { background: var(--olaf); }
 .oddsbar i.tie { background: var(--rule); }
 @media (prefers-reduced-motion: reduce) { .oddsbar i { transition: none; } }
+.oddssub { font-size: 12.5px; }

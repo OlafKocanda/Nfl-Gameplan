@@ -95,10 +95,11 @@ Diagramm als Inline-SVG in `drawChart()`).
 „Siegchance der Woche“ (`weekOdds()`, `weekOddsSteps()`, `oddsCard()`,
 `drawOdds()`): exakte Verteilung der Punktdifferenz über alle Spiele der
 Woche aus ESPN-Siegchance (vor dem Spiel `pre`, live `home`, danach das
-Ergebnis) und den Tipps. Fremde Tipps vor Anpfiff werden nicht benutzt,
-sondern als „tippt nach ESPN-Wahrscheinlichkeit“ geschätzt – sonst würde die
-Grafik geheime Tipps verraten. Verlauf: vor der Woche, nach jedem beendeten
-Spiel, live.
+Ergebnis) und den Tipps. Spiele vor Anpfiff zählen für beide gleich (beide
+Tipps als „nach ESPN-Wahrscheinlichkeit“ geschätzt, auch der eigene): vor der
+Woche steht 50:50, nichts Geheimes fließt ein, beide Geräte zeigen dasselbe.
+Remis wird je zur Hälfte verteilt. Verlauf: vor der Woche, nach jedem
+beendeten Spiel, live.
 
 Farben Anni/Olaf sind mit dem dataviz-Validator auf Farbschwäche geprüft
 (hell `#d6336c`/`#1098ad`, dunkel `#e64980`/`#1098ad`). Nicht ohne erneute
