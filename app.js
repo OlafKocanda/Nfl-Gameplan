@@ -65,7 +65,12 @@ const S = {
   note: {},           // id -> Hinweis an einer Spielzeile
   wp: new Map(),      // id -> {home, away, live, at}  Siegchance von ESPN
   showWp: (() => { try { return localStorage.getItem("tippspiel:wp") === "1"; } catch { return false; } })(),
-  filter: (() => { try { return localStorage.getItem("tippspiel:filter") || "all"; } catch { return "all"; } })(),
+  filter: (() => {                   // {status: [...], tips: [...]}, leer = keine Einschränkung
+    try {
+      const f = JSON.parse(localStorage.getItem("tippspiel:filter") || "{}");
+      return { status: Array.isArray(f.status) ? f.status : [], tips: Array.isArray(f.tips) ? f.tips : [] };
+    } catch { return { status: [], tips: [] }; }
+  })(),
 };
 const unsub = [];
 const other = () => (S.me === "anni" ? "olaf" : "anni");
@@ -674,8 +679,8 @@ function oddsCard(week) {
       ${low && low.v < 50 ? `Zwischendurch lag die Chance nur bei <strong>${pct(low.v)}</strong> (${esc(steps[low.i].label)}).`
         : "Die Chance lag nie unter 50 %."}` : "Die Woche endet unentschieden."}</p>`;
   } else {
-    head = `<span class="oddsnum"><span class="anni">Anni ${pct(now.a)}</span><span class="olaf">Olaf ${pct(now.o)}</span>
-      <span class="muted">Remis ${pct(now.t)}</span></span>
+    head = `<span class="oddsnum"><span class="anni">Anni ${pct(now.a)}</span>
+      <span class="muted">Remis ${pct(now.t)}</span><span class="olaf">Olaf ${pct(now.o)}</span></span>
       ${!games.some(started) ? `<span class="muted oddssub">Noch kein Spiel angepfiffen – beide haben die gleiche Chance.</span>` : ""}`;
   }
   return `<div class="odds">
@@ -905,8 +910,13 @@ document.addEventListener("click", e => {
     if (location.hash === "#hilfe") location.hash = ""; else render();
   }
   else if (act === "filter") {
-    S.filter = b.dataset.filter;
-    try { localStorage.setItem("tippspiel:filter", S.filter); } catch {}
+    const { group, filter } = b.dataset;
+    if (filter === "all") S.filter = { status: [], tips: [] };
+    else {
+      const cur = S.filter[group];
+      S.filter = { ...S.filter, [group]: cur.includes(filter) ? cur.filter(k => k !== filter) : [...cur, filter] };
+    }
+    try { localStorage.setItem("tippspiel:filter", JSON.stringify(S.filter)); } catch {}
     render();
   }
   else if (act === "wp") {
@@ -1085,17 +1095,30 @@ function render() {
   });
 }
 
-// Filter für die Spielwoche. Der fremde Tipp ist erst nach Anpfiff bekannt,
+// Filter für die Spielwoche: zwei Gruppen, innerhalb "oder", zwischen den
+// Gruppen "und". Der fremde Tipp ist erst nach Anpfiff bekannt,
 // "unterschiedlich"/"gleich" gelten deshalb nur für angepfiffene Spiele.
-const FILTERS = [
-  ["all", "Alle", () => true],
-  ["todo", "Ohne Tipp", g => !started(g) && !S.mine.has(g.id)],
-  ["open", "Offen", g => !started(g)],
-  ["live", "Läuft", g => started(g) && !g.winner],
-  ["done", "Beendet", g => !!g.winner],
-  ["diff", "Unterschiedlich", g => S.mine.has(g.id) && S.theirs.has(g.id) && S.mine.get(g.id) !== S.theirs.get(g.id)],
-  ["same", "Gleich", g => S.mine.has(g.id) && S.theirs.has(g.id) && S.mine.get(g.id) === S.theirs.get(g.id)],
-];
+const FILTER_GROUPS = {
+  status: [
+    ["open", "Offen", g => !started(g)],
+    ["live", "Läuft", g => started(g) && !g.winner],
+    ["done", "Beendet", g => !!g.winner],
+  ],
+  tips: [
+    ["todo", "Ohne Tipp", g => !started(g) && !S.mine.has(g.id)],
+    ["diff", "Unterschiedlich", g => S.mine.has(g.id) && S.theirs.has(g.id) && S.mine.get(g.id) !== S.theirs.get(g.id)],
+    ["same", "Gleich", g => S.mine.has(g.id) && S.theirs.has(g.id) && S.mine.get(g.id) === S.theirs.get(g.id)],
+  ],
+};
+function groupTest(group, keys) {
+  const tests = FILTER_GROUPS[group].filter(([k]) => keys.includes(k)).map(f => f[2]);
+  return g => !tests.length || tests.some(t => t(g));
+}
+function filterTest(f = S.filter) {
+  const a = groupTest("status", f.status), b = groupTest("tips", f.tips);
+  return g => a(g) && b(g);
+}
+const filterActive = () => S.filter.status.length + S.filter.tips.length > 0;
 
 function renderWeek(n) {
   const games = [...S.games.values()].filter(g => g.week === n).sort((a, b) =>
@@ -1106,14 +1129,23 @@ function renderWeek(n) {
   }
   const sc = scores();
   const playableAll = games.filter(g => g.away && g.home);
-  const fdef = FILTERS.find(f => f[0] === S.filter) || FILTERS[0];
-  const shown = fdef[0] === "all" ? games : playableAll.filter(fdef[2]);
-  const chips = FILTERS.map(([key, label, test]) => {
-    const count = key === "all" ? playableAll.length : playableAll.filter(test).length;
-    if (key !== "all" && key !== fdef[0] && !count) return "";
-    return `<button class="fchip${key === fdef[0] ? " on" : ""}" data-act="filter" data-filter="${key}"
-      aria-pressed="${key === fdef[0]}">${label}<span>${count}</span></button>`;
-  }).join("");
+  const shown = filterActive() ? playableAll.filter(filterTest()) : games;
+  // Anzahl je Chip: Spiele, die dieser Filter zusammen mit der anderen Gruppe ergibt
+  const chip = (group, [key, label]) => {
+    const on = S.filter[group].includes(key);
+    const count = playableAll.filter(filterTest({ ...S.filter, [group]: [key] })).length;
+    const off = !on && !count;
+    return `<button class="fchip${on ? " on" : ""}" data-act="filter" data-group="${group}" data-filter="${key}"
+      aria-pressed="${on}"${off ? " disabled" : ""}>${label}<span>${count}</span></button>`;
+  };
+  const chips = `<button class="fchip${filterActive() ? "" : " on"}" data-act="filter" data-filter="all"
+      aria-pressed="${!filterActive()}">Alle<span>${playableAll.length}</span></button>
+    <span class="fsep" aria-hidden="true"></span>
+    ${FILTER_GROUPS.status.map(f => chip("status", f)).join("")}
+    <span class="fsep" aria-hidden="true"></span>
+    ${FILTER_GROUPS.tips.map(f => chip("tips", f)).join("")}`;
+  const fname = [...FILTER_GROUPS.status, ...FILTER_GROUPS.tips]
+    .filter(([k]) => S.filter.status.includes(k) || S.filter.tips.includes(k)).map(f => f[1]).join(" + ");
   const rows = [];
   let lastDay = null;
   for (const g of shown) {
@@ -1155,7 +1187,7 @@ function renderWeek(n) {
           ${S.showWp ? "✓ " : ""}Siegchance</button>
       </div>
       <div class="filters" role="group" aria-label="Spiele filtern">${chips}</div>
-      <ul class="games">${rows.join("") || `<li class="nofilter">Keine Spiele für „${fdef[1]}“.
+      <ul class="games">${rows.join("") || `<li class="nofilter">Keine Spiele für „${fname}“.
         <button class="linkbtn" data-act="filter" data-filter="all">Alle zeigen</button></li>`}</ul>
       ${S.showWp ? `<p class="meta wpnote">Siegchance laut ESPN: vor dem Spiel die Prognose,
         während des Spiels live.</p>` : ""}
