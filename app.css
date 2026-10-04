@@ -570,3 +570,7 @@ button.whobtn { flex: 1; padding: 0; background: none; border: 0; min-height: 0;
 .sync-btn.busy .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .sync-btn.busy .spin { animation: none; } }
+
+.banner.zettel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-color: var(--olaf); }
+.banner.zettel button { padding: 8px 14px; min-height: 38px; font-size: 14px; }
+.zmsg { font-weight: 600; color: var(--ink); }

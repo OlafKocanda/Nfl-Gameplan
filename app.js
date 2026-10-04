@@ -613,6 +613,55 @@ async function backfill(gid, p, choice) {
   }
 }
 
+// Einmaliger Import vom Papierzettel (Wochen 1-2 und erstes Spiel Woche 3),
+// von Olaf bestätigt. Spiel-ID -> [Anni, Olaf]. Kann nach dem Import raus.
+const ZETTEL = { 1: ["SEA", "NE"], 2: ["SF", "LAR"], 3: ["CHI", "CHI"], 4: ["TB", "CIN"], 5: ["BAL", "BAL"], 6: ["BUF", "BUF"], 7: ["DET", "NO"], 8: ["TEN", "TEN"], 9: ["PIT", "ATL"], 10: ["JAX", "JAX"], 11: ["LAC", "LAC"], 12: ["GB", "GB"], 13: ["MIA", "LV"], 14: ["PHI", "PHI"], 15: ["NYG", "NYG"], 16: ["KC", "KC"], 17: ["BUF", "BUF"], 18: ["MIN", "CHI"], 19: ["PHI", "PHI"], 20: ["GB", "GB"], 21: ["ATL", "CAR"], 22: ["BAL", "BAL"], 23: ["CIN", "CIN"], 24: ["TB", "TB"], 25: ["PIT", "NE"], 26: ["LAC", "LAC"], 27: ["DEN", "DEN"], 28: ["WAS", "DAL"], 29: ["SEA", "SEA"], 30: ["SF", "SF"], 31: ["KC", "KC"], 32: ["LAR", "NYG"], 33: ["GB", "GB"] };
+function zettelPending() {
+  return Object.entries(ZETTEL).filter(([id, [a, o]]) => {
+    const g = S.games.get(+id);
+    if (!g || !isBackfill(g)) return false;
+    const want = t => (t === g.away ? "away" : t === g.home ? "home" : null);
+    const cur = p => (p === S.me ? S.mine : S.theirs).get(+id);
+    return cur("anni") !== want(a) || cur("olaf") !== want(o);
+  }).length;
+}
+async function importZettel() {
+  if (!S.players.anni || !S.players.olaf) {
+    S.zettelMsg = "Beide müssen sich zuerst einmal angemeldet haben.";
+    return render();
+  }
+  S.zettelMsg = "Wird übernommen …";
+  render();
+  // Pro Spiel ein eigener Schreibvorgang: Firestore erlaubt je Vorgang nur
+  // wenige Regel-Lookups, alles auf einmal würde abgelehnt.
+  let n = 0, failed = 0;
+  await Promise.all(Object.entries(ZETTEL).map(async ([id, picks]) => {
+    const g = S.games.get(+id);
+    if (!g || !isBackfill(g)) return;
+    const b = writeBatch(db);
+    const done = [];
+    ["anni", "olaf"].forEach((p, i) => {
+      const choice = picks[i] === g.away ? "away" : picks[i] === g.home ? "home" : null;
+      if (!choice) return;
+      b.set(doc(db, "picks", `${id}_${p}`),
+        { game: String(id), player: p, uid: S.players[p], choice, at: serverTimestamp() });
+      b.set(doc(db, "tipped", `${id}_${p}`), { game: String(id), player: p });
+      done.push([p, choice]);
+    });
+    try {
+      await b.commit();
+      for (const [p, choice] of done) {
+        (p === S.me ? S.mine : S.theirs).set(+id, choice);
+        S.tipped.add(`${id}_${p}`);
+        n++;
+      }
+    } catch { failed++; }
+  }));
+  S.zettelMsg = failed ? `${n} Tipps übernommen, ${failed} Spiele hat die Datenbank abgelehnt. Bitte nochmal tippen.`
+    : `✓ ${n} Tipps vom Zettel übernommen.`;
+  render();
+}
+
 // Beim Öffnen der Nachtrage-Seite die Papiertipps des anderen frisch holen.
 async function refreshBackfill() {
   const o = other();
@@ -646,6 +695,7 @@ document.addEventListener("click", e => {
   else if (act === "pick") pick(gid, b.dataset.choice);
   else if (act === "winner") patchGame(gid, { winner: b.dataset.choice });
   else if (act === "backfill") backfill(gid, b.dataset.player, b.dataset.choice);
+  else if (act === "zettel") importZettel();
   else if (act === "sync") syncAll();
   else if (act === "ics") downloadIcs();
   else if (act === "intro-done") {
@@ -1058,6 +1108,10 @@ function renderBackfill(want) {
         Einer von euch kann beide eintragen, jeder Klick wird sofort gespeichert und zählt
         gleich in der Tabelle. Möglich bis einschließlich 17.10.2026.
         ${ohne.length ? `<br>${ohne.map(p => PLAYERS[p]).join(", ")} muss sich zuerst einmal anmelden.` : ""}</p>
+      ${zettelPending() ? `<div class="banner zettel">📄 Euer Zettel für Woche 1, 2 und das erste Spiel von Woche 3
+        ist ausgelesen (${Object.keys(ZETTEL).length * 2} Tipps).
+        <button data-act="zettel">Zettel übernehmen</button></div>` : ""}
+      ${S.zettelMsg ? `<p class="meta bfintro zmsg">${esc(S.zettelMsg)}</p>` : ""}
       <div class="bftabs">${tabs}</div>
       <h3 class="bfweek">Woche ${week}<span class="wsub">${fehlt}</span></h3>
       <ul class="games">${rows}</ul>
