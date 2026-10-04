@@ -914,7 +914,10 @@ document.addEventListener("click", e => {
     if (filter === "all") S.filter = { status: [], tips: [] };
     else {
       const cur = S.filter[group];
-      S.filter = { ...S.filter, [group]: cur.includes(filter) ? cur.filter(k => k !== filter) : [...cur, filter] };
+      // Status: Mehrfachauswahl (oder). Tipps: schließen sich aus, nur eine Auswahl.
+      const next = cur.includes(filter) ? cur.filter(k => k !== filter)
+        : group === "tips" ? [filter] : [...cur, filter];
+      S.filter = { ...S.filter, [group]: next };
     }
     try { localStorage.setItem("tippspiel:filter", JSON.stringify(S.filter)); } catch {}
     render();
@@ -1095,8 +1098,8 @@ function render() {
   });
 }
 
-// Filter für die Spielwoche: zwei Gruppen, innerhalb "oder", zwischen den
-// Gruppen "und". Der fremde Tipp ist erst nach Anpfiff bekannt,
+// Filter für die Spielwoche: zwei Gruppen, zwischen den Gruppen "und".
+// Status mehrfach wählbar ("oder"), Tipps schließen sich aus (nur einer). Der fremde Tipp ist erst nach Anpfiff bekannt,
 // "unterschiedlich"/"gleich" gelten deshalb nur für angepfiffene Spiele.
 const FILTER_GROUPS = {
   status: [
@@ -1133,7 +1136,7 @@ function renderWeek(n) {
   // Anzahl je Chip: Spiele, die dieser Filter zusammen mit der anderen Gruppe ergibt
   const chip = (group, [key, label]) => {
     const on = S.filter[group].includes(key);
-    const count = playableAll.filter(filterTest({ ...S.filter, [group]: [key] })).length;
+    const count = playableAll.filter(filterTest({ ...S.filter, [group]: [key] })).length;   // Wert beim Wechsel/Hinzunehmen
     const off = !on && !count;
     return `<button class="fchip${on ? " on" : ""}" data-act="filter" data-group="${group}" data-filter="${key}"
       aria-pressed="${on}"${off ? " disabled" : ""}>${label}<span>${count}</span></button>`;
