@@ -13,10 +13,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <title>Tippspiel</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
-<link rel="stylesheet" href="app.css">
 </head>
 <body>
-<div class="wrap"><p class="meta pad">Lade …</p></div>
-<script type="module" src="app.js"></script>
+<div class="wrap"><p class="meta pad" style="font:16px sans-serif;color:#5d6b85;padding:48px 16px">Lade …</p></div>
+<script type="module">
+  // Immer die neueste Fassung laden: GitHub Pages lässt Browser Dateien sonst
+  // bis zu 10 Minuten zwischenspeichern, und Updates kommen verspätet an.
+  const v = Date.now();
+  const css = document.createElement("link");
+  css.rel = "stylesheet";
+  css.href = `app.css?v=${v}`;
+  document.head.append(css);
+  import(`./app.js?v=${v}`).catch(() => {
+    document.querySelector(".wrap").innerHTML = '<p class="meta pad">Die Seite konnte nicht geladen werden. ' +
+      'Bitte Verbindung prüfen und neu laden.</p><button onclick="location.reload()">Neu laden</button>';
+  });
+</script>
 </body>
 </html>

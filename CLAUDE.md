@@ -29,6 +29,9 @@ Ansichten werden mit `paint(html)` eingespielt, nicht mit `wrap.innerHTML`:
 `morph()` fasst nur geänderte Knoten an, sonst flackern bei jedem Abgleich
 die Logos. Elemente mit `data-keep` (das Diagramm) zeichnen sich selbst.
 
+`index.html` lädt `app.css` und `app.js` mit `?v=<Zeitstempel>`, damit
+Updates sofort ankommen (GitHub Pages cacht sonst bis zu 10 Minuten).
+
 ## Datenmodell (Firestore)
 
 - `meta/players` — `{anni: uid, olaf: uid}`; wer sich zuerst als Anni bzw.
