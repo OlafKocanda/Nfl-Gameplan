@@ -22,7 +22,11 @@ test/rules.test.mjs Regeltests gegen den Emulator (npm test)
 Bewusst klein gehalten: kein Framework, kein Build-Schritt, das Firebase-SDK
 kommt vom gstatic-CDN, Schriften (Barlow Condensed, Inter) von Google Fonts,
 Team-Logos vom ESPN-CDN. Hell- und Dunkelmodus über CSS-Variablen in
-`app.css`. Bitte so lassen. `package.json` ist nur für Emulator
+`app.css`. Bitte so lassen.
+
+Ansichten werden mit `paint(html)` eingespielt, nicht mit `wrap.innerHTML`:
+`morph()` fasst nur geänderte Knoten an, sonst flackern bei jedem Abgleich
+die Logos. Elemente mit `data-keep` (das Diagramm) zeichnen sich selbst. `package.json` ist nur für Emulator
 und Tests da, nicht für die Seite.
 
 ## Datenmodell (Firestore)

@@ -728,10 +728,39 @@ function nav(week) {
 }
 
 // Die angezeigte Woche in der Leiste mittig halten.
+// Nur wenn sich die Seite ändert, sonst nicht ins Wischen des Nutzers funken.
+let centeredFor = null;
 function centerWeek() {
   const strip = wrap.querySelector(".weeks");
   const el = strip && (strip.querySelector(".wk.sel") || strip.querySelector(".wk.cur"));
-  if (el) strip.scrollLeft = el.offsetLeft - strip.clientWidth / 2 + el.offsetWidth / 2;
+  const key = location.hash + "|" + (el && el.textContent);
+  if (!el || key === centeredFor) return;
+  centeredFor = key;
+  strip.scrollLeft = el.offsetLeft - strip.clientWidth / 2 + el.offsetWidth / 2;
+}
+
+// Neue Ansicht einspielen, aber nur geänderte Knoten anfassen. So bleiben
+// Logos, Fokus und Scrollpositionen stehen, statt bei jedem Abgleich neu zu laden.
+function paint(html) {
+  const next = document.createElement("div");
+  next.innerHTML = html;
+  morph(wrap, next);
+}
+function morph(from, to) {
+  const a = [...from.childNodes], b = [...to.childNodes];
+  b.forEach((y, i) => {
+    const x = a[i];
+    if (!x) return from.appendChild(y);
+    if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) return from.replaceChild(y, x);
+    if (x.nodeType !== 1) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; return; }
+    if (x.isEqualNode(y)) return;
+    if (x.hasAttribute("data-keep") && y.hasAttribute("data-keep")) return;   // malt sich selbst (Diagramm)
+    for (const { name } of [...x.attributes]) if (!y.hasAttribute(name)) x.removeAttribute(name);
+    for (const { name, value } of [...y.attributes]) if (x.getAttribute(name) !== value) x.setAttribute(name, value);
+    if ("disabled" in x) x.disabled = y.disabled;
+    morph(x, y);
+  });
+  for (let i = a.length - 1; i >= b.length; i--) from.removeChild(a[i]);
 }
 
 function footer() {
@@ -783,7 +812,7 @@ function renderWeek(n) {
   const games = [...S.games.values()].filter(g => g.week === n).sort((a, b) =>
     (a.kickoff ? 0 : 1) - (b.kickoff ? 0 : 1) || (a.kickoff || 0) - (b.kickoff || 0) || a.id - b.id);
   if (!games.length) {
-    wrap.innerHTML = nav(n) + `<p>Diese Woche gibt es nicht.</p>`;
+    paint(nav(n) + `<p>Diese Woche gibt es nicht.</p>`);
     return;
   }
   const sc = scores();
@@ -811,7 +840,7 @@ function renderWeek(n) {
   const cur = currentWeek();
   const badge = n === cur ? `<span class="curbadge">Aktuelle Woche</span>`
     : `<a class="tocur" href="#woche=${cur}">${n < cur ? "Zur aktuellen Woche →" : "← Zur aktuellen Woche"}</a>`;
-  wrap.innerHTML = nav(n) + (n === cur ? reminder() : "") + scoreboard(sc) + `
+  paint(nav(n) + (n === cur ? reminder() : "") + scoreboard(sc) + `
     <section class="week${n === cur ? " is-cur" : ""}">
       <div class="weekhead">${badge}</div>
       <h2>${title}<span class="wsub">${stand || (n <= 18 ? label : "")}
@@ -828,7 +857,7 @@ function renderWeek(n) {
       ${S.showWp ? `<p class="meta wpnote">Siegchance laut ESPN: vor dem Spiel die Prognose,
         während des Spiels live.</p>` : ""}
       ${footer()}
-    </section>`;
+    </section>`);
   ensureWp(n);
 }
 
@@ -923,7 +952,7 @@ function renderTable() {
     + (S.sync.ok ? "" : " (mit Fehlern, ggf. per Hand eintragen)")
     : "Ergebnisse von ESPN, der erste Abgleich läuft gleich";
   document.title = "Tabelle - Tippspiel";
-  wrap.innerHTML = nav(null) + scoreboard(sc) + `
+  paint(nav(null) + scoreboard(sc) + `
     <section class="week">
       <h2>Auswertung</h2>
       <table class="tbl stats">
@@ -952,7 +981,7 @@ function renderTable() {
         <button data-act="sync">Jetzt aktualisieren</button>
       </div>
       ${footer()}
-    </section>`;
+    </section>`);
 }
 
 function renderBackfill(want) {
@@ -1000,7 +1029,7 @@ function renderBackfill(want) {
     ?? weeks.find(w => w !== week && missingIn(all.filter(g => g.week === w)));
   const done = !missingIn(games);
   document.title = `Papiertipps Woche ${week} - Tippspiel`;
-  wrap.innerHTML = nav(null) + `
+  paint(nav(null) + `
     <section class="week">
       <h2>Papiertipps</h2>
       <p class="meta bfintro">Die Tipps vom Papier für die Spiele vor dem Start der App.
@@ -1013,7 +1042,7 @@ function renderBackfill(want) {
       ${done ? (next ? `<a class="banner next" href="#nachtragen=${next}">✓ Woche ${week} komplett – weiter zu Woche ${next} →</a>`
         : `<a class="banner next" href="#woche=${currentWeek()}">✓ Alle Papiertipps eingetragen – zur aktuellen Woche →</a>`) : ""}
       ${footer()}
-    </section>`;
+    </section>`);
 }
 
 function renderIntro() {
@@ -1021,7 +1050,7 @@ function renderIntro() {
   const step = (n, title, text) => `<li class="step"><span class="num">${n}</span>
     <div><h3>${title}</h3><p>${text}</p></div></li>`;
   document.title = "So funktioniert's - Tippspiel";
-  wrap.innerHTML = `
+  paint(`
     <header class="hero hero-login">
       <h1>Hallo ${PLAYERS[S.me]}!</h1>
       <p class="lede">So funktioniert das Tippspiel gegen ${o}, in einer Minute erklärt.</p>
@@ -1048,7 +1077,7 @@ function renderIntro() {
         "dann öffnet sich das Tippspiel wie eine App.")}
     </ol>
     <button class="go" data-act="intro-done">Los geht's</button>
-    <p class="meta helplink">Diese Anleitung findest du später unten auf jeder Spielwoche unter „So funktioniert's“.</p>`;
+    <p class="meta helplink">Diese Anleitung findest du später unten auf jeder Spielwoche unter „So funktioniert's“.</p>`);
 }
 
 // ---------------------------------------------------------------- Statistik
@@ -1095,10 +1124,10 @@ function renderStats() {
   const team = x => x ? `${logo(x.t)}<span>${esc(x.t)}</span><small>${x.ok}/${x.n}</small>` : `<span class="muted">–</span>`;
 
   document.title = "Statistik - Tippspiel";
-  wrap.innerHTML = nav(null) + `
+  paint(nav(null) + `
     <section class="week">
       <h2>Punkteverlauf<span class="wsub">richtige Tipps, aufsummiert</span></h2>
-      ${weeks.length ? `<div class="chart" id="chart"></div>` : `<p class="meta bfintro">Sobald Ergebnisse da sind, erscheint hier der Verlauf.</p>`}
+      ${weeks.length ? `<div class="chart" id="chart" data-keep></div>` : `<p class="meta bfintro">Sobald Ergebnisse da sind, erscheint hier der Verlauf.</p>`}
     </section>
     <section class="week">
       <h2>Kennzahlen</h2>
@@ -1128,12 +1157,15 @@ function renderStats() {
         </tbody>
       </table>
       ${footer()}
-    </section>`;
+    </section>`);
   if (weeks.length) drawChart(document.getElementById("chart"), weeks, series);
 }
 
 function drawChart(el, weeks, series) {
   const W = Math.max(280, el.clientWidth), H = 230;
+  const key = JSON.stringify([W, weeks, series.map(s => s.pts)]);
+  if (el.dataset.key === key) return;                // nichts geändert, nicht neu zeichnen
+  el.dataset.key = key;
   const m = { t: 14, r: 64, b: 28, l: 30 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const max = Math.max(4, ...series.flatMap(s => s.pts));
