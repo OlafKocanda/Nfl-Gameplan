@@ -657,3 +657,31 @@ button.whobtn { flex: 1; padding: 0; background: none; border: 0; min-height: 0;
   background: color-mix(in srgb, var(--olaf) 13%, var(--card)); }
 
 .tools .toggle { font-size: 12.5px; padding: 4px 10px; }
+
+/* ---------------------------------------------------- Siegchance der Woche */
+.odds {
+  margin: 12px 0 0; padding: 12px 14px 8px;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow);
+}
+.oddshead { display: flex; flex-direction: column; gap: 4px; font-size: 14.5px; }
+.oddshead .tl { display: flex; align-items: center; gap: 6px; }
+.oddshead strong.anni { color: var(--anni); }
+.oddshead strong.olaf { color: var(--olaf); }
+.oddsnum { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px;
+  font-family: var(--display); font-size: 30px; font-weight: 700; line-height: 1.05; }
+.oddsnum .anni { color: var(--anni); }
+.oddsnum .olaf { color: var(--olaf); }
+.oddsnum .muted { font-size: 20px; }
+.livedot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--live);
+  animation: pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .livedot { animation: none; } }
+.oddschart { margin: 8px -6px 0; padding: 6px 4px 2px; border: 0; box-shadow: none; background: transparent; }
+.oddsnote { padding-left: 0; margin: 4px 0 2px; font-size: 12px; }
+.tip .tsub { display: block; margin: -2px 0 4px; color: var(--ink-2); font-size: 11.5px; width: auto; text-align: left; }
+.oddsres { margin: 0; line-height: 1.45; }
+.oddsbar { display: flex; height: 10px; margin: 10px 0 2px; border-radius: 99px; overflow: hidden; gap: 2px; }
+.oddsbar i { display: block; min-width: 0; transition: width .5s cubic-bezier(.2,.7,.2,1); }
+.oddsbar i.anni { background: var(--anni); }
+.oddsbar i.olaf { background: var(--olaf); }
+.oddsbar i.tie { background: var(--rule); }
+@media (prefers-reduced-motion: reduce) { .oddsbar i { transition: none; } }

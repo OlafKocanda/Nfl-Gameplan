@@ -562,7 +562,7 @@ async function loadWp(g) {
   const age = old ? Date.now() - old.at : Infinity;
   if (old && (old.final || age < (g.status === "in" ? 55e3 : 30 * 60e3))) return false;
   if (g.status === "post" && g.pre_wp != null) {
-    S.wp.set(g.id, { home: g.pre_wp, away: 100 - g.pre_wp, live: false, at: Date.now(), final: true });
+    S.wp.set(g.id, { home: g.pre_wp, away: 100 - g.pre_wp, pre: g.pre_wp, live: false, at: Date.now(), final: true });
     return true;
   }
   S.wp.set(g.id, { ...(old || { home: null }), at: Date.now() });   // nicht bei jedem Rendern neu fragen
@@ -570,27 +570,160 @@ async function loadWp(g) {
   if (!r.ok) return false;
   const d = await r.json();
   const wp = d.winprobability || [];
-  let home = null, live = false;
+  let home = null, live = false, pre = null;
+  if (d.predictor && d.predictor.homeTeam) {
+    const h = parseFloat(d.predictor.homeTeam.gameProjection), a = parseFloat(d.predictor.awayTeam.gameProjection);
+    if (!isNaN(h) && !isNaN(a) && h + a > 0) pre = h / (h + a) * 100;
+  }
+  if (pre == null && wp.length) pre = wp[0].homeWinPercentage * 100;   // Wert zum Anpfiff
   if (g.status === "in" && wp.length) { home = wp[wp.length - 1].homeWinPercentage * 100; live = true; }
-  else if (d.predictor && d.predictor.homeTeam) {
-    home = parseFloat(d.predictor.homeTeam.gameProjection);
-    const away = parseFloat(d.predictor.awayTeam.gameProjection);
-    if (!isNaN(home) && !isNaN(away) && home + away > 0) home = home / (home + away) * 100;
-  } else if (wp.length) home = wp[0].homeWinPercentage * 100;
+  else home = pre;
   if (home == null || isNaN(home)) return false;
-  S.wp.set(g.id, { home, away: 100 - home, live, at: Date.now(), final: g.status === "post" });
+  S.wp.set(g.id, { home, away: 100 - home, pre, live, at: Date.now(), final: g.status === "post" });
   return true;
 }
 
 let wpBusy = false;
+// Lädt auch ohne den Siegchance-Knopf: die Wochen-Prognose braucht die Werte.
 async function ensureWp(week) {
-  if (!S.showWp || wpBusy) return;
+  if (wpBusy) return;
   wpBusy = true;
   try {
     const gs = [...S.games.values()].filter(g => g.week === week && g.espn_id);
     const got = await Promise.all(gs.map(g => loadWp(g).catch(() => false)));
     if (got.some(Boolean)) render();
   } finally { wpBusy = false; }
+}
+
+// ------------------------------------------------- Siegchance der Woche
+// Wahrscheinlichkeit, dass Anni bzw. Olaf die Woche gewinnt. Pro Spiel zählt
+// nur, ob die Tipps verschieden sind und wer davon richtig liegt; daraus
+// ergibt sich die Verteilung der Punktdifferenz (exakt, per Faltung).
+// Fremde Tipps vor Anpfiff kennt die App nicht: dann wird angenommen, der
+// andere tippt nach ESPN-Wahrscheinlichkeit. So verrät die Grafik nichts.
+const preProb = g => g.pre_wp ?? S.wp.get(g.id)?.pre ?? 50;
+function pickDist(p, g, q) {
+  const c = p === S.me ? S.mine.get(g.id) : S.theirs.get(g.id);
+  if (c) return { [c]: 1 };
+  const hidden = p !== S.me && S.tipped.has(`${g.id}_${p}`);   // getippt, aber (noch) nicht sichtbar
+  if (started(g) && !hidden) return {};                          // kein Tipp mehr möglich
+  return { home: q, away: 1 - q };
+}
+function weekOdds(games, probOf, resultOf) {
+  let dist = new Map([[0, 1]]);
+  for (const g of games) {
+    if (!g.away || !g.home) continue;
+    const res = resultOf(g), q = Math.min(1, Math.max(0, probOf(g) / 100));
+    const pa = pickDist("anni", g, q), po = pickDist("olaf", g, q);
+    const step = { 1: 0, 0: 0, [-1]: 0 };
+    for (const [w, pw] of res ? [[res, 1]] : [["home", q], ["away", 1 - q]]) {
+      const sa = w === "tie" ? 0 : pa[w] || 0, so = w === "tie" ? 0 : po[w] || 0;
+      step[1] += pw * sa * (1 - so);
+      step[-1] += pw * (1 - sa) * so;
+      step[0] += pw * (sa * so + (1 - sa) * (1 - so));
+    }
+    const next = new Map();
+    for (const [d, pd] of dist) for (const k of [1, 0, -1]) {
+      if (step[k]) next.set(d + k, (next.get(d + k) || 0) + pd * step[k]);
+    }
+    dist = next;
+  }
+  let a = 0, o = 0, t = 0;
+  for (const [d, pd] of dist) d > 0 ? (a += pd) : d < 0 ? (o += pd) : (t += pd);
+  return { a: a * 100, o: o * 100, t: t * 100 };
+}
+// Verlauf: vor der Woche, nach jedem beendeten Spiel, live
+function weekOddsSteps(week) {
+  const games = [...S.games.values()].filter(g => g.week === week && g.away && g.home)
+    .sort((a, b) => (a.kickoff || 0) - (b.kickoff || 0) || a.id - b.id);
+  const done = games.filter(g => g.winner);
+  const steps = [{ label: "Vor der Woche", ...weekOdds(games, preProb, () => null) }];
+  done.forEach((g, i) => {
+    const fixed = new Set(done.slice(0, i + 1).map(x => x.id));
+    const win = g.winner === "tie" ? "Unentschieden" : g[g.winner];
+    steps.push({ label: `nach ${g.away} @ ${g.home}`, sub: `Sieger ${win}`,
+      ...weekOdds(games, preProb, x => (fixed.has(x.id) ? x.winner : null)) });
+  });
+  const running = games.filter(g => !g.winner && g.status === "in");
+  if (running.length) {
+    steps.push({ label: "Jetzt (live)", sub: `${running.length} ${running.length === 1 ? "Spiel läuft" : "Spiele laufen"}`, live: true,
+      ...weekOdds(games, g => (g.status === "in" && S.wp.get(g.id)?.live ? S.wp.get(g.id).home : preProb(g)), x => x.winner || null) });
+  }
+  return { steps, games, done: games.length > 0 && done.length === games.length };
+}
+
+function oddsCard(week) {
+  const { steps, games, done } = weekOddsSteps(week);
+  if (!games.length) return "";
+  const anyPick = games.some(g => S.mine.has(g.id) || S.theirs.has(g.id));
+  if (!anyPick) return "";
+  const now = steps[steps.length - 1], first = steps[0];
+  const pct = v => `${Math.round(v)} %`;
+  let head;
+  if (done) {
+    const w = now.a > 50 ? "anni" : now.o > 50 ? "olaf" : null;
+    head = `<p class="oddsres">${w ? `<strong class="${w}">${PLAYERS[w]}</strong> hat die Woche gewonnen. Vor der Woche
+      lag die Chance bei <strong>${pct(w === "anni" ? first.a : first.o)}</strong>.`
+      : `Unentschieden. Vor der Woche lag die Chance dafür bei <strong>${pct(first.t)}</strong>.`}</p>`;
+  } else {
+    head = `<span class="oddsnum"><span class="anni">Anni ${pct(now.a)}</span>
+      <span class="olaf">Olaf ${pct(now.o)}</span><span class="muted">Remis ${pct(now.t)}</span></span>`;
+  }
+  return `<div class="odds">
+    <div class="oddshead"><span class="tl">Siegchance der Woche${now.live ? ` <i class="livedot"></i>live` : ""}</span>${head}</div>
+    <div class="oddsbar" role="img" aria-label="Anni ${pct(now.a)}, Remis ${pct(now.t)}, Olaf ${pct(now.o)}">
+      <i class="anni" style="width:${now.a}%"></i><i class="tie" style="width:${now.t}%"></i><i class="olaf" style="width:${now.o}%"></i></div>
+    ${steps.length > 1 ? `<div class="chart oddschart" id="oddschart" data-keep></div>` : ""}
+    <p class="meta oddsnote">Aus ESPN-Siegchancen und euren Tipps.
+      ${games.some(g => !started(g)) ? `Tipps von ${PLAYERS[other()]} für noch nicht angepfiffene Spiele bleiben geheim und werden geschätzt.` : ""}</p>
+  </div>`;
+}
+
+function drawOdds(el, steps) {
+  const W = Math.max(280, el.clientWidth), H = 190;
+  const key = JSON.stringify([W, steps.map(s => [s.label, Math.round(s.a), Math.round(s.o)])]);
+  if (el.dataset.key === key) return;
+  el.dataset.key = key;
+  const m = { t: 12, r: 78, b: 22, l: 42 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const x = i => m.l + (steps.length === 1 ? iw / 2 : i * iw / (steps.length - 1));
+  const y = v => m.t + ih - v / 100 * ih;
+  const ser = [{ k: "a", cls: "anni", name: "Anni" }, { k: "o", cls: "olaf", name: "Olaf" }];
+  let grid = "";
+  for (const v of [0, 50, 100]) grid += `<line class="grid" x1="${m.l}" x2="${m.l + iw}" y1="${y(v)}" y2="${y(v)}"/>
+    <text class="ax" x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v} %</text>`;
+  const xl = `<text class="ax" x="${m.l}" y="${H - 6}">Start</text>
+    <text class="ax" x="${m.l + iw}" y="${H - 6}" text-anchor="end">${steps[steps.length - 1].live ? "jetzt" : "Ende"}</text>`;
+  const ends = ser.map(s => ({ s, v: steps[steps.length - 1][s.k], y: y(steps[steps.length - 1][s.k]) })).sort((a, b) => a.y - b.y);
+  if (ends[1].y - ends[0].y < 15) ends[1].y = ends[0].y + 15;
+  const lines = ser.map(s => `<path class="ln ${s.cls}" d="${steps.map((st, i) => `${i ? "L" : "M"}${x(i)},${y(st[s.k])}`).join("")}"/>
+    ${steps.map((st, i) => `<circle class="dot ${s.cls}" cx="${x(i)}" cy="${y(st[s.k])}" r="${steps.length > 12 ? 3 : 4}"/>`).join("")}`).join("");
+  const tags = ends.map(e => `<text class="tag ${e.s.cls}" x="${m.l + iw + 8}" y="${e.y + 4}">${e.s.name} ${Math.round(e.v)} %</text>`).join("");
+  el.innerHTML = `
+    <div class="legend"><span class="lg anni"><i></i>Anni gewinnt</span><span class="lg olaf"><i></i>Olaf gewinnt</span></div>
+    <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="Siegchance der Woche: Anni ${Math.round(steps.at(-1).a)} Prozent, Olaf ${Math.round(steps.at(-1).o)} Prozent">
+      ${grid}${xl}<line class="cross" y1="${m.t}" y2="${m.t + ih}" x1="-10" x2="-10"/>${lines}${tags}
+      <rect class="hit" x="${m.l - 10}" y="0" width="${iw + 20}" height="${H}"/>
+    </svg>
+    <div class="tip" hidden></div>`;
+  const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), cross = el.querySelector(".cross");
+  const show = ev => {
+    const r = svg.getBoundingClientRect();
+    const i = steps.length === 1 ? 0 : Math.max(0, Math.min(steps.length - 1, Math.round((ev.clientX - r.left - m.l) / iw * (steps.length - 1))));
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
+    const st = steps[i];
+    tip.innerHTML = `<b>${esc(st.label)}</b>${st.sub ? `<small class="tsub">${esc(st.sub)}</small>` : ""}
+      <span class="tr"><i class="anni"></i>Anni<em>${Math.round(st.a)} %</em></span>
+      <span class="tr"><i class="olaf"></i>Olaf<em>${Math.round(st.o)} %</em></span>
+      <span class="tr"><i></i>Remis<em>${Math.round(st.t)} %</em></span>`;
+    tip.hidden = false;
+    tip.style.left = `${Math.min(Math.max(x(i) - tip.offsetWidth / 2, 0), W - tip.offsetWidth)}px`;
+  };
+  const hide = () => { tip.hidden = true; cross.setAttribute("x1", -10); cross.setAttribute("x2", -10); };
+  svg.addEventListener("pointermove", show);
+  svg.addEventListener("pointerdown", show);
+  svg.addEventListener("pointerleave", hide);
 }
 
 // ------------------------------------------------------------ Neu laden
@@ -961,6 +1094,7 @@ function renderWeek(n) {
       <h2>${title}<span class="wsub">${stand || (n <= 18 ? label : "")}
         ${done ? `&nbsp;·&nbsp; ${done} gewertet` : ""}</span></h2>
       ${weekBanner(n, sc)}
+      ${oddsCard(n)}
       ${paperMissing ? `<a class="note paper" href="#nachtragen=${n}">📝 ${paperMissing === 1 ? "1 Papiertipp fehlt"
         : `${paperMissing} Papiertipps fehlen`} in dieser Woche noch – nachtragen</a>` : ""}
       <div class="tools">
@@ -976,6 +1110,8 @@ function renderWeek(n) {
       ${footer()}
     </section>`);
   ensureWp(n);
+  const oc = document.getElementById("oddschart");
+  if (oc) drawOdds(oc, weekOddsSteps(n).steps);
 }
 
 function chip(who, g, live) {
