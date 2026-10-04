@@ -702,18 +702,36 @@ function renderClaim(err = "") {
     </div>`;
 }
 
+const WEEK_SHORT = { 19: "WC", 20: "DIV", 21: "CONF", 22: "SB" };
+
+// Kopfzeile plus Wochenleiste. week = angezeigte Woche (null auf Tabelle/Statistik).
 function nav(week) {
-  const opts = WEEKS.map(([w, l]) =>
-    `<option value="${w}"${w === week ? " selected" : ""}>${l}</option>`).join("");
+  const cur = currentWeek();
+  const sc = scores();
+  const pills = WEEKS.map(([w, l]) => {
+    const r = weekResult(w, sc);
+    const cls = ["wk"];
+    if (w === cur) cls.push("cur");
+    if (w === week) cls.push("sel");
+    if (r.done) cls.push(r.a > r.o ? "won-anni" : r.o > r.a ? "won-olaf" : "won-tie");
+    else if (w < cur) cls.push("past");
+    return `<a class="${cls.join(" ")}" href="#woche=${w}" aria-label="${l}${w === cur ? ", aktuelle Woche" : ""}"
+      ${w === week ? 'aria-current="page"' : ""}>${w === cur ? '<span class="now">jetzt</span>' : ""}${WEEK_SHORT[w] || w}</a>`;
+  }).join("");
   return `
     <nav class="nav">
-      <form class="weekpick" onsubmit="return false">
-        <label class="sr" for="w">Spielwoche</label>
-        <select id="w">${opts}</select>
-      </form>
-      <a href="#tabelle" class="navlink">Tabelle</a>
-      <a href="#statistik" class="navlink">Statistik</a>
-    </nav>`;
+      <a href="#woche=${cur}" class="brand">🏈 Tippspiel</a>
+      <a href="#tabelle" class="navlink${location.hash === "#tabelle" ? " on" : ""}">Tabelle</a>
+      <a href="#statistik" class="navlink${location.hash === "#statistik" ? " on" : ""}">Statistik</a>
+    </nav>
+    <div class="weeks" role="navigation" aria-label="Spielwochen">${pills}</div>`;
+}
+
+// Die angezeigte Woche in der Leiste mittig halten.
+function centerWeek() {
+  const strip = wrap.querySelector(".weeks");
+  const el = strip && (strip.querySelector(".wk.sel") || strip.querySelector(".wk.cur"));
+  if (el) strip.scrollLeft = el.offsetLeft - strip.clientWidth / 2 + el.offsetWidth / 2;
 }
 
 function footer() {
@@ -757,6 +775,7 @@ function render() {
     else if (h === "#nachtragen" && backfillOpen()) renderBackfill();
     else if (h === "#statistik") renderStats();
     else renderWeek(+(h.match(/woche=(\d+)/) || [])[1] || currentWeek());
+    centerWeek();
   });
 }
 
@@ -786,15 +805,20 @@ function renderWeek(n) {
     : open ? `${open} Spiele warten noch auf deinen Tipp`
     : tipped ? `${tipped} von ${playable.length} getippt` : "";
   document.title = `${title} - Tippspiel`;
-  const paper = backfillOpen() && [...S.games.values()].some(g => isBackfill(g)
-    && (!S.mine.has(g.id) || !S.theirs.has(g.id)));
-  wrap.innerHTML = nav(n) + reminder() + scoreboard(sc) + `
-    ${paper ? `<a class="banner paper" href="#nachtragen">📝 Papiertipps der ersten Wochen nachtragen
-      (bis 17.10.)</a>` : ""}
-    <section class="week">
+  // Papiertipps nur in den Wochen erwähnen, in denen wirklich welche fehlen
+  const paperMissing = backfillOpen() ? games.filter(isBackfill).reduce((k, g) =>
+    k + (S.mine.has(g.id) ? 0 : 1) + (S.theirs.has(g.id) ? 0 : 1), 0) : 0;
+  const cur = currentWeek();
+  const badge = n === cur ? `<span class="curbadge">Aktuelle Woche</span>`
+    : `<a class="tocur" href="#woche=${cur}">${n < cur ? "Zur aktuellen Woche →" : "← Zur aktuellen Woche"}</a>`;
+  wrap.innerHTML = nav(n) + (n === cur ? reminder() : "") + scoreboard(sc) + `
+    <section class="week${n === cur ? " is-cur" : ""}">
+      <div class="weekhead">${badge}</div>
       <h2>${title}<span class="wsub">${stand || (n <= 18 ? label : "")}
         ${done ? `&nbsp;·&nbsp; ${done} gewertet` : ""}</span></h2>
       ${weekBanner(n, sc)}
+      ${paperMissing ? `<a class="note paper" href="#nachtragen">📝 ${paperMissing === 1 ? "1 Papiertipp fehlt"
+        : `${paperMissing} Papiertipps fehlen`} in dieser Woche noch – nachtragen</a>` : ""}
       <div class="tools">
         <button class="toggle" data-act="ics">⏰ Kalender-Erinnerung</button>
         <button class="toggle${S.showWp ? " on" : ""}" data-act="wp" aria-pressed="${S.showWp}">
@@ -899,7 +923,7 @@ function renderTable() {
     + (S.sync.ok ? "" : " (mit Fehlern, ggf. per Hand eintragen)")
     : "Ergebnisse von ESPN, der erste Abgleich läuft gleich";
   document.title = "Tabelle - Tippspiel";
-  wrap.innerHTML = nav(currentWeek()) + scoreboard(sc) + `
+  wrap.innerHTML = nav(null) + scoreboard(sc) + `
     <section class="week">
       <h2>Auswertung</h2>
       <table class="tbl stats">
@@ -959,7 +983,7 @@ function renderBackfill() {
   const fehlt = Object.keys(PLAYERS).map(p => `${PLAYERS[p]} ${missing(p) ? `${missing(p)} offen` : "komplett"}`).join(" · ");
   const ohne = Object.keys(PLAYERS).filter(p => !S.players[p]);
   document.title = "Papiertipps - Tippspiel";
-  wrap.innerHTML = nav(currentWeek()) + `
+  wrap.innerHTML = nav(null) + `
     <section class="week">
       <h2>Papiertipps<span class="wsub">${fehlt}</span></h2>
       <p class="meta bfintro">Die Tipps vom Papier für die Spiele vor dem Start der App.
@@ -1049,7 +1073,7 @@ function renderStats() {
   const team = x => x ? `${logo(x.t)}<span>${esc(x.t)}</span><small>${x.ok}/${x.n}</small>` : `<span class="muted">–</span>`;
 
   document.title = "Statistik - Tippspiel";
-  wrap.innerHTML = nav(currentWeek()) + `
+  wrap.innerHTML = nav(null) + `
     <section class="week">
       <h2>Punkteverlauf<span class="wsub">richtige Tipps, aufsummiert</span></h2>
       ${weeks.length ? `<div class="chart" id="chart"></div>` : `<p class="meta bfintro">Sobald Ergebnisse da sind, erscheint hier der Verlauf.</p>`}
