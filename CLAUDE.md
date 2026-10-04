@@ -30,7 +30,10 @@ Ansichten werden mit `paint(html)` eingespielt, nicht mit `wrap.innerHTML`:
 die Logos. Elemente mit `data-keep` (das Diagramm) zeichnen sich selbst.
 
 `index.html` lädt `app.css` und `app.js` mit `?v=<Zeitstempel>`, damit
-Updates sofort ankommen (GitHub Pages cacht sonst bis zu 10 Minuten).
+Updates sofort ankommen (GitHub Pages cacht sonst bis zu 10 Minuten). Der
+Knopf „↻ Stand …“ ruft `hardRefresh()`: leert localStorage (außer
+Einstellungen), den Firestore-Offline-Cache und CacheStorage und lädt die
+Seite mit neuem `?v=` neu.
 
 ## Datenmodell (Firestore)
 

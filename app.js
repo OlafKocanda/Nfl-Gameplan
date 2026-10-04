@@ -8,7 +8,7 @@ import {
 import {
   initializeFirestore, persistentLocalCache, memoryLocalCache, connectFirestoreEmulator, collection, doc, getDoc, getDocs,
   onSnapshot, query, runTransaction, serverTimestamp, Timestamp, updateDoc,
-  where, writeBatch,
+  where, writeBatch, terminate, clearIndexedDbPersistence,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig as liveConfig } from "./firebase-config.js";
 
@@ -569,6 +569,27 @@ async function ensureWp(week) {
   } finally { wpBusy = false; }
 }
 
+// ------------------------------------------------------------ Neu laden
+// Alles frisch: gemerkte Tipps des anderen, Datenbank-Zwischenspeicher und
+// Browser-Caches weg, dann die Seite mit neuer Adresse laden (umgeht auch
+// den Cache für index.html). Gemerkt bleiben nur Einstellungen.
+let refreshing = false;
+async function hardRefresh() {
+  if (refreshing) return;
+  refreshing = true;
+  S.syncBusy = true;
+  render();
+  const keep = new Set(["tippspiel:intro", "tippspiel:wp"]);
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith("tippspiel:") && !keep.has(k)) localStorage.removeItem(k);
+  } catch {}
+  try { if (window.caches) for (const k of await caches.keys()) await caches.delete(k); } catch {}
+  try { unsub.splice(0).forEach(f => f()); await terminate(db); await clearIndexedDbPersistence(db); } catch {}
+  const q = new URLSearchParams(location.search);
+  q.set("v", Date.now());
+  location.replace(`${location.pathname}?${q}${location.hash}`);
+}
+
 // ---------------------------------------------------------------- Aktionen
 async function pick(gid, choice) {
   const g = S.games.get(gid);
@@ -696,7 +717,7 @@ document.addEventListener("click", e => {
   else if (act === "winner") patchGame(gid, { winner: b.dataset.choice });
   else if (act === "backfill") backfill(gid, b.dataset.player, b.dataset.choice);
   else if (act === "zettel") importZettel();
-  else if (act === "sync") syncAll();
+  else if (act === "sync") hardRefresh();
   else if (act === "ics") downloadIcs();
   else if (act === "intro-done") {
     try { localStorage.setItem("tippspiel:intro", "1"); } catch {}
@@ -919,7 +940,7 @@ function renderWeek(n) {
       ${paperMissing ? `<a class="note paper" href="#nachtragen=${n}">📝 ${paperMissing === 1 ? "1 Papiertipp fehlt"
         : `${paperMissing} Papiertipps fehlen`} in dieser Woche noch – nachtragen</a>` : ""}
       <div class="tools">
-        <button class="toggle sync-btn${S.syncBusy ? " busy" : ""}" data-act="sync" title="Ergebnisse jetzt von ESPN holen">
+        <button class="toggle sync-btn${S.syncBusy ? " busy" : ""}" data-act="sync" title="Alles neu laden: neueste Version, Daten und Ergebnisse">
           <span class="spin">↻</span> ${S.syncBusy ? "lädt …" : S.sync.at ? `Stand ${berlin(S.sync.at).time}` : "Aktualisieren"}</button>
         <button class="toggle" data-act="ics">⏰ Erinnerung</button>
         <button class="toggle${S.showWp ? " on" : ""}" data-act="wp" aria-pressed="${S.showWp}">
